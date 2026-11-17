@@ -252,12 +252,24 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <div id="leads"></div>
 </section>
 
-<p class="note" style="max-width:1000px;margin:0 auto 24px">Đăng ký học từ website và kết quả kiểm tra được lưu trên Cloudflare D1. Dữ liệu lớp học, học viên nội bộ, lịch học và nhật ký hiện vẫn lưu trên trình duyệt này, chưa đồng bộ giữa các thiết bị.</p>
+<p class="note" id="syncStatus" role="status" aria-live="polite" style="max-width:1000px;margin:0 auto 24px">Dữ liệu quản trị sẽ được đồng bộ lên Cloudflare khi đăng nhập.</p>
 </main>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const SYNC_KEYS=["cls","cl","sts","jr","mine","leads"];
+let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null;
+const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudDirty=new Set();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
-const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+function syncMessage(message,isError=false){const el=$("#syncStatus");if(el){el.textContent=message;el.style.color=isError?"#c8102e":"var(--mu)"}}
+function sv(k,v){
+  try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}
+  if(!cloudApplying && SYNC_KEYS.includes(k) && cloudSyncReady && authToken) queueCloudSave(k,v);
+}
+function queueCloudSave(key,value){
+  cloudDirty.add(key);
+  clearTimeout(cloudSaveTimers.get(key));
+  cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value),700));
+}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const id=()=>Date.now()+Math.random();
 const DY=["T2","T3","T4","T5","T6","T7","CN"];
@@ -328,7 +340,101 @@ async function apiRequest(path, options = {}) {
   return data;
 }
 
-function enterSystem(user) {
+function currentStateValue(key){
+  return ({cls,cl,sts,jr,mine,leads})[key];
+}
+function applyStateValue(key,value){
+  if(!Array.isArray(value)) return;
+  if(key==="cls") cls=value;
+  else if(key==="cl") cl=value;
+  else if(key==="sts") sts=value;
+  else if(key==="jr") jr=value;
+  else if(key==="mine") mine=value;
+  else if(key==="leads") leads=value;
+  try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}
+}
+function renderAllData(){
+  rTT(); rJr(); rFc(); rLd(); show();
+}
+async function saveCloudKey(key,value){
+  if(!authToken || !cloudSyncReady) return;
+  const previous=cloudSaveQueues.get(key)||Promise.resolve();
+  const task=previous.catch(()=>{}).then(async()=>{
+    try{
+      const result=await apiRequest("/api/state/"+key,{
+        method:"PUT",
+        body:JSON.stringify({data:value,revision:cloudRevisions[key]??null})
+      });
+      cloudRevisions[key]=result.revision;
+      cloudDirty.delete(key);
+      syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
+    }catch(error){
+      if(error.message.includes("dữ liệu mới hơn") || error.message.includes("ghi đè") || error.message.includes("máy chủ")){
+        syncMessage("Phát hiện thay đổi từ thiết bị khác ở mục "+key+". Đã chặn ghi đè; hãy tải lại dữ liệu mới nhất.",true);
+      }else syncMessage("Chưa đồng bộ được mục "+key+": "+error.message,true);
+    }
+  });
+  cloudSaveQueues.set(key,task);
+  await task;
+}
+async function fetchCloudState(){
+  const result=await apiRequest("/api/state");
+  return result;
+}
+async function initializeCloudSync(){
+  syncMessage("Đang kiểm tra và đồng bộ dữ liệu...");
+  try{
+    const result=await fetchCloudState();
+    const keys=Object.keys(result.state||{});
+    cloudRevisions=result.revisions||{};
+    cloudApplying=true;
+    if(keys.length){
+      for(const key of SYNC_KEYS){
+        if(Object.prototype.hasOwnProperty.call(result.state,key)) applyStateValue(key,result.state[key]);
+      }
+    }
+    cloudApplying=false;
+    if(!keys.length){
+      syncMessage("Đang chuyển dữ liệu hiện có trên trình duyệt lên Cloudflare...");
+      for(const key of SYNC_KEYS) await saveCloudKey(key,currentStateValue(key));
+    }else{
+      for(const key of SYNC_KEYS){
+        if(!Object.prototype.hasOwnProperty.call(result.state,key)) await saveCloudKey(key,currentStateValue(key));
+      }
+    }
+    cloudSyncReady=true;
+    renderAllData();
+    syncMessage("Đã kết nối dữ liệu dùng chung trên Cloudflare. Các thiết bị sẽ tự kiểm tra cập nhật.");
+    if(cloudPoller) clearInterval(cloudPoller);
+    cloudPoller=setInterval(pollCloudState,20000);
+  }catch(error){
+    cloudApplying=false;
+    cloudSyncReady=false;
+    syncMessage("Không thể tải dữ liệu dùng chung: "+error.message,true);
+  }
+}
+async function pollCloudState(){
+  if(!authToken || !cloudSyncReady) return;
+  try{
+    const result=await fetchCloudState();
+    const changed=SYNC_KEYS.filter(key=>(result.revisions?.[key]||0)>(cloudRevisions[key]||0));
+    if(!changed.length) return;
+    if(cloudDirty.size || [...cloudSaveQueues.values()].some(p=>p)){
+      syncMessage("Có thay đổi mới từ thiết bị khác. Hoàn tất lưu dữ liệu đang chỉnh sửa trước khi tải lại.",true);
+      return;
+    }
+    cloudApplying=true;
+    for(const key of changed){
+      if(Object.prototype.hasOwnProperty.call(result.state,key)) applyStateValue(key,result.state[key]);
+      cloudRevisions[key]=result.revisions[key];
+    }
+    cloudApplying=false;
+    renderAllData();
+    syncMessage("Đã nhận cập nhật mới từ thiết bị khác · "+new Date().toLocaleTimeString("vi-VN"));
+  }catch(error){cloudApplying=false;syncMessage("Mất kết nối đồng bộ tạm thời: "+error.message,true)}
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible") pollCloudState()});
+async function enterSystem(user) {
   signedInUser = user;
   document.body.classList.add("authenticated");
   document.body.classList.toggle("is-admin", user.role === "admin");
@@ -336,6 +442,7 @@ function enterSystem(user) {
   $("#accountName").textContent = user.full_name + " · " + (user.role === "admin" ? "Admin" : "Giáo viên");
   if (user.role !== "admin" && location.hash === "#giao-vien") location.hash = "#lop-hoc";
   show();
+  await initializeCloudSync();
   if (user.role === "admin") loadTeachers();
   loadRegistrations();
   loadResults();
@@ -347,6 +454,8 @@ function leaveSystem() {
   signedInUser = null;
   sessionStorage.removeItem("jp_class_token");
   document.body.classList.remove("authenticated", "is-admin");
+  cloudSyncReady=false;
+  if(cloudPoller){clearInterval(cloudPoller);cloudPoller=null}
   $("#loginGate").style.display = "grid";
   $("#loginForm").reset();
   $("#loginError").textContent = "Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại.";
@@ -368,7 +477,7 @@ $("#loginForm").onsubmit = async (event) => {
     });
     authToken = result.token;
     sessionStorage.setItem("jp_class_token", authToken);
-    enterSystem(result.user);
+    await enterSystem(result.user);
   } catch (error) {
     $("#loginError").textContent = error.message;
   } finally {
@@ -478,7 +587,7 @@ async function restoreSession() {
   if (!authToken) return;
   try {
     const result = await apiRequest("/api/me");
-    enterSystem(result.user);
+    await enterSystem(result.user);
   } catch (_) {
     authToken = "";
     sessionStorage.removeItem("jp_class_token");
