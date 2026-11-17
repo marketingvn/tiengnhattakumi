@@ -386,7 +386,7 @@ export default {
       console.error("API ERROR:", error);
       const message = String(error?.message || error);
       if (message.includes("UNIQUE")) return json({ error: "Tên đăng nhập đã tồn tại hoặc dữ liệu bị trùng." }, 409, origin);
-      return json({ error: "Có lỗi khi xử lý yêu cầu.", detail: message }, 500, origin);
+      return json({ error: "Có lỗi khi xử lý yêu cầu. Vui lòng thử lại hoặc liên hệ quản trị viên." }, 500, origin);
     }
   }
 };
