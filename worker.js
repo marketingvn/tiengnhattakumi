@@ -244,12 +244,17 @@ export default {
         }
 
         const id = crypto.randomUUID();
-        // Tương thích cả schema cũ (full_name/course/note) và các cột mới.
-        await env.DB.prepare(`
-          INSERT INTO registrations
-            (id, full_name, phone, course, note, status, name, level, interested_class, goal)
-          VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?, ?)
-        `).bind(id, name, phone, level, goal, name, level, interestedClass, goal).run();
+        // Tự nhận diện cột để tương thích D1 đã tạo theo schema cũ hoặc mới.
+        const tableInfo = await env.DB.prepare("PRAGMA table_info(registrations)").all();
+        const available = new Set((tableInfo.results || []).map(column => column.name));
+        const values = { id, full_name: name, phone, course: level, note: goal, status: "new", name, level, interested_class: interestedClass, goal };
+        const columns = Object.keys(values).filter(column => available.has(column));
+        if (!columns.includes("id") || !columns.includes("phone")) {
+          return json({ error: "Cấu trúc bảng đăng ký học thử chưa đầy đủ. Vui lòng kiểm tra D1." }, 500, origin);
+        }
+        const placeholders = columns.map(() => "?").join(", ");
+        await env.DB.prepare(`INSERT INTO registrations (${columns.join(", ")}) VALUES (${placeholders})`)
+          .bind(...columns.map(column => values[column])).run();
 
         return json({ ok: true, id, message: "Đã nhận đăng ký học thử." }, 201, origin);
       }
@@ -258,15 +263,18 @@ export default {
       if (path === "/api/registrations" && request.method === "GET") {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Bạn cần đăng nhập để xem danh sách đăng ký." }, 401, origin);
+        const tableInfo = await env.DB.prepare("PRAGMA table_info(registrations)").all();
+        const available = new Set((tableInfo.results || []).map(column => column.name));
+        const nameColumn = available.has("name") ? "name" : (available.has("full_name") ? "full_name" : "''");
+        const levelColumn = available.has("level") ? "level" : (available.has("course") ? "course" : "''");
+        const classColumn = available.has("interested_class") ? "interested_class" : "''";
+        const goalColumn = available.has("goal") ? "goal" : (available.has("note") ? "note" : "''");
+        const createdColumn = available.has("created_at") ? "created_at" : "''";
         const result = await env.DB.prepare(`
-          SELECT id,
-                 COALESCE(name, full_name) AS name,
-                 phone,
-                 COALESCE(level, course, '') AS level,
-                 COALESCE(interested_class, '') AS interested_class,
-                 COALESCE(goal, note, '') AS goal,
-                 created_at
-          FROM registrations ORDER BY created_at DESC LIMIT 300
+          SELECT id, ${nameColumn} AS name, phone, ${levelColumn} AS level,
+                 ${classColumn} AS interested_class, ${goalColumn} AS goal,
+                 ${createdColumn} AS created_at
+          FROM registrations ORDER BY ${createdColumn} DESC LIMIT 300
         `).all();
         return json({ registrations: result.results || [] }, 200, origin);
       }
