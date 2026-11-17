@@ -1,4 +1,4 @@
-# Nhật Ngữ Takumi — Hướng dẫn triển khai bản hoàn chỉnh
+# Nhật Ngữ Umitomo — Hướng dẫn cập nhật và triển khai
 
 ## 1. Cấu trúc triển khai
 
@@ -34,9 +34,10 @@ Bản này gồm ba phần tách biệt. Không đưa file SQL hoặc Worker API
 
 ## 5. Database
 
-- Database hiện tại đã có bảng `app_state`; không chạy lại `migration_sync.sql` nếu bảng đã tồn tại.
-- `schema.sql` là schema đầy đủ dành cho cài đặt database mới. Không chạy đè schema lên database đang có dữ liệu.
-- Bản cập nhật Worker tự nhận diện các cột cũ/mới của bảng `registrations`, không yêu cầu xóa bảng hoặc tạo database mới.
+1. Trước khi cập nhật, xuất bản sao lưu D1 để có thể khôi phục nếu cần.
+2. Với database đang sử dụng, chạy nội dung file `migration_sync.sql` **một lần** trong D1 Console. Migration tạo lại riêng bảng `app_state`, giữ nguyên dữ liệu hiện có và bổ sung hai khóa `att` (điểm danh), `lessons` (bài giảng YouTube). Không xóa database và không chạy lại toàn bộ `schema.sql` trên database đang có dữ liệu.
+3. Với database cài mới, chạy `schema.sql`; không cần chạy `migration_sync.sql` sau đó.
+4. Chỉ triển khai `worker.js` sau khi migration hoàn tất thành công.
 
 ## 6. Kiểm tra sau triển khai
 
