@@ -197,7 +197,7 @@ export default {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Bạn cần đăng nhập để lưu dữ liệu." }, 401, origin);
         const key = stateMatch[1];
-        const allowed = new Set(["cls", "cl", "sts", "jr", "mine", "leads"]);
+        const allowed = new Set(["cls", "cl", "sts", "jr", "mine", "leads", "att"]);
         if (!allowed.has(key)) return json({ error: "Nhóm dữ liệu không hợp lệ." }, 404, origin);
         const body = await readBody(request);
         if (!body || !Array.isArray(body.data)) return json({ error: "Dữ liệu phải là một danh sách hợp lệ." }, 400, origin);
