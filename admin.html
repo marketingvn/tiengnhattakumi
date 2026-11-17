@@ -252,15 +252,15 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <div id="leads"></div>
 </section>
 
-<p class="note" id="syncStatus" role="status" aria-live="polite" style="max-width:1000px;margin:0 auto 24px">Đang chờ xác nhận đồng bộ dữ liệu từ Cloudflare...</p>
+<p class="note" style="max-width:1000px;margin:0 auto 24px"><span id="syncStatus" role="status" aria-live="polite">Đang chờ xác nhận đồng bộ dữ liệu từ Cloudflare...</span> <button class="btn sec sm" id="syncReload" type="button" style="display:none">Tải dữ liệu mới nhất</button></p>
 </main>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SYNC_KEYS=["cls","cl","sts","jr","mine","leads"];
 let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null;
-const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudSaveVersions=new Map(), cloudDirty=new Set();
+const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudSaveVersions=new Map(), cloudDirty=new Set(), cloudConflicts=new Set();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
-function syncMessage(message,isError=false){const el=$("#syncStatus");if(el){el.textContent=message;el.style.color=isError?"#c8102e":"var(--mu)"}}
+function syncMessage(message,isError=false,canReload=false){const el=$("#syncStatus"),button=$("#syncReload");if(el){el.textContent=message;el.style.color=isError?"#c8102e":"var(--mu)"}if(button)button.style.display=canReload?"inline-block":"none"}
 function sv(k,v){
   try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}
   if(!cloudApplying && SYNC_KEYS.includes(k) && cloudSyncReady && authToken) queueCloudSave(k,v);
@@ -318,7 +318,7 @@ $("#fWord").onsubmit=e=>{e.preventDefault();const o=fd(e.target);mine.push({id:i
 $("#fcDel").onclick=()=>{const w=deck()[wi];if(!w||!w[4])return;mine=mine.filter(m=>m.id!=w[4]);sv("mine",mine);fl=false;rFc()};
 $("#jrF").onchange=rJr;
 function rLd(){$("#leads").innerHTML=leads.map(l=>`<div class="card" style="margin-bottom:8px"><b>${esc(l.name)}</b> · ${esc(l.phone)}<br><span class="mu">${esc(l.level)}${l.goal?" – "+esc(l.goal):""}</span></div>`).join("")||'<p class="empty">Chưa có đăng ký nào.</p>'}
-$("#fLead").onsubmit=e=>{e.preventDefault();leads.push({id:id(),...fd(e.target)});sv("leads",leads);rLd();e.target.reset();$("#leadMsg").textContent="Đã lưu đăng ký trên trình duyệt này. Để được xếp lịch nhanh, hãy gọi hotline 098 425 2743 hoặc nhắn Zalo."};
+$("#fLead").onsubmit=e=>{e.preventDefault();leads.push({id:id(),...fd(e.target)});sv("leads",leads);rLd();e.target.reset();$("#leadMsg").textContent="Đã lưu đăng ký học thử và đồng bộ lên hệ thống."};
 const op=new Set();
 function rCl(){$("#clList").innerHTML=cl.map(c=>`<div class="card"><div class="row"><h3>${esc(c.name)}</h3><span class="lv" style="font-size:1.1rem">${esc(c.level)}</span></div><p style="margin:6px 0"><span class="chip">${esc(c.type)}</span><span class="chip">${esc(c.mode)}</span><span class="chip">${c.m.length}/${c.max||"∞"} học viên</span>${c.fee?`<span class="chip">${Number(c.fee).toLocaleString("vi-VN")}đ/tháng</span>`:""}${c.start?`<span class="chip">Khai giảng ${esc(c.start)}</span>`:""}</p>${c.note?`<p style="margin:6px 0">${esc(c.note)}</p>`:""}<p class="mu" style="margin:6px 0;font-size:.85rem">${sch(c.name)||"Chưa có lịch. Thêm ở mục Lịch học."}</p><details data-o="${c.id}"${op.has(String(c.id))?" open":""}><summary>Chọn học viên cho lớp (${c.m.length})</summary>${sts.map(s=>`<label style="display:flex;gap:8px;align-items:center;margin:6px 0;color:var(--tx)"><input type="checkbox" style="width:auto" data-k="${c.id}" value="${s.id}"${c.m.some(i=>i==s.id)?" checked":""}>${esc(s.name)} <span class="mu">${esc(s.level)}</span></label>`).join("")||'<p class="empty">Chưa có học viên. Thêm ở mục Học viên.</p>'}</details><button class="btn sec sm" data-dc="${c.id}" style="margin-top:8px">Xóa lớp</button></div>`).join("")||'<p class="empty">Chưa có lớp. Tạo lớp đầu tiên ở trên.</p>';
 $$("[data-o]").forEach(d=>d.ontoggle=()=>{d.open?op.add(d.dataset.o):op.delete(d.dataset.o)});
@@ -369,11 +369,12 @@ async function saveCloudKey(key,value,version){
       });
       cloudRevisions[key]=result.revision;
       if(version===undefined || cloudSaveVersions.get(key)===version) cloudDirty.delete(key);
-      syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
+      if(version===undefined || cloudSaveVersions.get(key)===version) syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
       return true;
     }catch(error){
       if(error.message.includes("dữ liệu mới hơn") || error.message.includes("ghi đè") || error.message.includes("máy chủ")){
-        syncMessage("Phát hiện thay đổi từ thiết bị khác ở mục "+key+". Đã chặn ghi đè; hãy tải lại dữ liệu mới nhất.",true);
+        cloudConflicts.add(key);
+        syncMessage("Phát hiện dữ liệu mới hơn từ thiết bị khác ở mục "+key+". Hệ thống đã chặn ghi đè.",true,true);
       }else syncMessage("Chưa đồng bộ được mục "+key+": "+error.message,true);
       return false;
     }
@@ -385,6 +386,28 @@ async function fetchCloudState(){
   const result=await apiRequest("/api/state");
   return result;
 }
+async function reloadCloudData(){
+  if(!authToken || !cloudSyncReady) return;
+  if(cloudDirty.size && !confirm("Một số thay đổi trên thiết bị này chưa được đồng bộ. Tải dữ liệu mới nhất sẽ thay thế các thay đổi đó. Bạn có chắc muốn tiếp tục?")) return;
+  syncMessage("Đang tải dữ liệu mới nhất từ Cloudflare...");
+  for(const timer of cloudSaveTimers.values()) clearTimeout(timer);
+  cloudSaveTimers.clear();
+  try{
+    await Promise.all([...cloudSaveQueues.values()].map(task=>task.catch(()=>{})));
+    const result=await fetchCloudState();
+    cloudApplying=true;
+    for(const key of SYNC_KEYS){
+      if(Object.prototype.hasOwnProperty.call(result.state||{},key)) applyStateValue(key,result.state[key]);
+    }
+    cloudRevisions=result.revisions||{};
+    cloudDirty.clear();
+    cloudConflicts.clear();
+    cloudApplying=false;
+    renderAllData();
+    syncMessage("Đã tải dữ liệu mới nhất từ Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
+  }catch(error){cloudApplying=false;syncMessage("Không tải được dữ liệu mới: "+error.message,true,true)}
+}
+$("#syncReload").onclick=reloadCloudData;
 async function initializeCloudSync(){
   syncMessage("Đang kiểm tra và đồng bộ dữ liệu...");
   try{
