@@ -258,7 +258,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SYNC_KEYS=["cls","cl","sts","jr","mine","leads"];
 let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null;
-const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudDirty=new Set();
+const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudSaveVersions=new Map(), cloudDirty=new Set();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 function syncMessage(message,isError=false){const el=$("#syncStatus");if(el){el.textContent=message;el.style.color=isError?"#c8102e":"var(--mu)"}}
 function sv(k,v){
@@ -267,8 +267,10 @@ function sv(k,v){
 }
 function queueCloudSave(key,value){
   cloudDirty.add(key);
+  const version=(cloudSaveVersions.get(key)||0)+1;
+  cloudSaveVersions.set(key,version);
   clearTimeout(cloudSaveTimers.get(key));
-  cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value),700));
+  cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value,version),700));
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const id=()=>Date.now()+Math.random();
@@ -356,7 +358,7 @@ function applyStateValue(key,value){
 function renderAllData(){
   rTT(); rJr(); rFc(); rLd(); show();
 }
-async function saveCloudKey(key,value){
+async function saveCloudKey(key,value,version){
   if(!authToken || !cloudSyncReady) return;
   const previous=cloudSaveQueues.get(key)||Promise.resolve();
   const task=previous.catch(()=>{}).then(async()=>{
@@ -366,7 +368,7 @@ async function saveCloudKey(key,value){
         body:JSON.stringify({data:value,revision:cloudRevisions[key]??null})
       });
       cloudRevisions[key]=result.revision;
-      cloudDirty.delete(key);
+      if(version===undefined || cloudSaveVersions.get(key)===version) cloudDirty.delete(key);
       syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
       return true;
     }catch(error){
