@@ -49,3 +49,15 @@ CREATE TABLE IF NOT EXISTS test_results (
 );
 CREATE INDEX IF NOT EXISTS idx_tr_ip ON test_results (ip_hash, created_at);
 CREATE INDEX IF NOT EXISTS idx_tr_created ON test_results (created_at);
+
+
+-- Trạng thái dữ liệu quản trị dùng chung giữa các thiết bị.
+CREATE TABLE IF NOT EXISTS app_state (
+  state_key TEXT PRIMARY KEY CHECK (state_key IN ('cls', 'cl', 'sts', 'jr', 'mine', 'leads')),
+  payload TEXT NOT NULL,
+  revision INTEGER NOT NULL DEFAULT 1,
+  updated_by TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (updated_by) REFERENCES teachers(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_app_state_updated ON app_state(updated_at);
