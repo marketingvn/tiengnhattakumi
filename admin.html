@@ -88,7 +88,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
   </div>
 </div>
 
-<header><nav id="nav"><a class="brand" href="#lop-hoc" aria-label="Quản trị">管理<small>Quản trị lớp học</small></a><button data-v="lop-hoc">Lớp học</button><button data-v="lich-hoc">Lịch học</button><button data-v="hoc-vien">Học viên</button><button data-v="nhat-ky">Nhật ký</button><button data-v="ket-qua">Kết quả test</button><button id="teacherNav" data-v="giao-vien">Quản lý giáo viên</button><span id="accountBar"><span id="accountName"></span><button class="btn sec sm" id="logoutBtn">Đăng xuất</button></span><a class="btn sec sm" href="../">Xem trang công khai</a></nav></header>
+<header><nav id="nav"><a class="brand" href="#lop-hoc" aria-label="Quản trị">管理<small>Quản trị lớp học</small></a><button data-v="lop-hoc">Lớp học</button><button data-v="lich-hoc">Lịch học</button><button data-v="hoc-vien">Học viên</button><button data-v="nhat-ky">Nhật ký</button><button data-v="dang-ky-moi">Đăng ký học</button><button data-v="ket-qua">Kết quả test</button><button id="teacherNav" data-v="giao-vien">Quản lý giáo viên</button><span id="accountBar"><span id="accountName"></span><button class="btn sec sm" id="logoutBtn">Đăng xuất</button></span><a class="btn sec sm" href="../">Xem trang công khai</a></nav></header>
 <main>
 <p class="note" style="margin:0 0 16px">Đã kết nối đăng nhập và quản lý tài khoản qua Cloudflare. Lưu ý: dữ liệu lớp học, học viên, lịch và nhật ký ở phiên bản này vẫn lưu trên trình duyệt; chưa đồng bộ giữa giáo viên hoặc thiết bị.</p>
 
@@ -192,6 +192,14 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 </section>
 
 
+<section class="view" id="dang-ky-moi">
+<h2>Đăng ký học thử từ website</h2>
+<p class="mu">Danh sách được lưu trên Cloudflare D1, có thể xem từ các thiết bị khác nhau.</p>
+<p><button class="btn sec sm" id="regRefresh" type="button">Tải lại danh sách</button></p>
+<p id="regMsg" class="mu" role="status" aria-live="polite"></p>
+<div id="regTable"></div>
+</section>
+
 <section class="view" id="ket-qua">
 <h2>Kết quả bài test</h2>
 <p class="mu">Kết quả học viên làm trên trang công khai, mới nhất ở trên.</p>
@@ -260,7 +268,7 @@ let cls=ld("cls",[{id:1,name:"N5 – Lớp tối",day:"T2",time:"19:00",dur:90},
 let sts=ld("sts",[{id:1,name:"Minh Anh",level:"N5",goal:"Thi N5 tháng 12",p:40},{id:2,name:"Quốc Bảo",level:"N3",goal:"Đi làm công ty Nhật",p:65}]);
 let jr=ld("jr",[]),leads=ld("leads",[]);
 let cl=ld("cl",null);if(!cl)cl=[...new Set(cls.map(c=>c.name))].map((n,i)=>({id:i+1,name:n,level:"",type:"Nhóm",mode:"Online",max:6,fee:"",start:"",note:"",m:sts.filter(s=>s.cls===n).map(s=>s.id)}));
-const views=["lop-hoc","lich-hoc","hoc-vien","nhat-ky","ket-qua","giao-vien"];
+const views=["lop-hoc","lich-hoc","hoc-vien","nhat-ky","dang-ky-moi","ket-qua","giao-vien"];
 function show(){let h=location.hash.slice(1);if(!views.includes(h))h="lop-hoc";$$(".view").forEach(v=>v.classList.toggle("on",v.id===h));$$("#nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===h));scrollTo(0,0)}
 $$("#nav button").forEach(b=>b.onclick=()=>location.hash=b.dataset.v);
 $$("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
@@ -329,6 +337,7 @@ function enterSystem(user) {
   if (user.role !== "admin" && location.hash === "#giao-vien") location.hash = "#lop-hoc";
   show();
   if (user.role === "admin") loadTeachers();
+  loadRegistrations();
   loadResults();
 }
 
@@ -424,6 +433,26 @@ $("#teacherForm").onsubmit = async (event) => {
     button.disabled = false;
   }
 };
+
+async function loadRegistrations() {
+  if (!signedInUser) return;
+  const msg = $("#regMsg"), target = $("#regTable");
+  msg.textContent = "Đang tải danh sách đăng ký…";
+  target.innerHTML = "";
+  try {
+    const result = await apiRequest("/api/registrations");
+    const rows = result.registrations || [];
+    msg.textContent = rows.length ? rows.length + " đăng ký gần nhất." : "Chưa có đăng ký nào.";
+    if (!rows.length) { target.innerHTML = '<p class="empty">Chưa có học viên gửi đăng ký từ website.</p>'; return; }
+    target.innerHTML = '<table><thead><tr><th>Thời gian</th><th>Họ tên</th><th>Số điện thoại</th><th>Trình độ</th><th>Lớp quan tâm</th><th>Mục tiêu</th></tr></thead><tbody>' +
+      rows.map(r => '<tr><td>' + esc(r.created_at || "") + '</td><td><b>' + esc(r.name || "") + '</b></td><td>' + esc(r.phone || "") + '</td><td>' + esc(r.level || "") + '</td><td>' + esc(r.interested_class || "Chưa chọn") + '</td><td>' + esc(r.goal || "—") + '</td></tr>').join("") +
+      '</tbody></table>';
+  } catch (error) {
+    msg.textContent = "";
+    target.innerHTML = '<p class="empty">' + esc(error.message) + '</p>';
+  }
+}
+$("#regRefresh").onclick = loadRegistrations;
 
 async function loadResults() {
   if (!signedInUser) return;
