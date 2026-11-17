@@ -257,7 +257,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SYNC_KEYS=["cls","cl","sts","jr","mine","leads"];
-let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null;
+let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null, cloudSessionEpoch=0, cloudReloading=false;
 const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudSaveVersions=new Map(), cloudDirty=new Set(), cloudConflicts=new Set();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 function syncMessage(message,isError=false,canReload=false){const el=$("#syncStatus"),button=$("#syncReload");if(el){el.textContent=message;el.style.color=isError?"#c8102e":"var(--mu)"}if(button)button.style.display=canReload?"inline-block":"none"}
@@ -335,7 +335,7 @@ let authToken = sessionStorage.getItem("jp_class_token") || "";
 
 async function apiRequest(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
-  if (authToken) headers.Authorization = "Bearer " + authToken;
+  if (authToken && !headers.Authorization) headers.Authorization = "Bearer " + authToken;
   const response = await fetch(API_BASE + path, { ...options, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.detail || data.error || "Không thể xử lý yêu cầu.");
@@ -359,25 +359,30 @@ function renderAllData(){
   rTT(); rJr(); rFc(); rLd(); show();
 }
 async function saveCloudKey(key,value,version){
-  if(!authToken || !cloudSyncReady) return;
+  const token=authToken, epoch=cloudSessionEpoch;
+  if(!token || !cloudSyncReady) return false;
   const previous=cloudSaveQueues.get(key)||Promise.resolve();
   const task=previous.catch(()=>{}).then(async()=>{
+    if(epoch!==cloudSessionEpoch || token!==authToken || !cloudSyncReady) return false;
     try{
       const result=await apiRequest("/api/state/"+key,{
         method:"PUT",
+        headers:{Authorization:"Bearer "+token},
         body:JSON.stringify({data:value,revision:cloudRevisions[key]??null})
       });
+      if(epoch!==cloudSessionEpoch || token!==authToken) return false;
       cloudRevisions[key]=result.revision;
       if(version===undefined || cloudSaveVersions.get(key)===version) cloudDirty.delete(key);
       if(version===undefined || cloudSaveVersions.get(key)===version) syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
       return true;
     }catch(error){
+      if(epoch!==cloudSessionEpoch || token!==authToken) return false;
       if(error.message.includes("dữ liệu mới hơn") || error.message.includes("ghi đè") || error.message.includes("máy chủ")){
         cloudConflicts.add(key);
         syncMessage("Phát hiện dữ liệu mới hơn từ thiết bị khác ở mục "+key+". Hệ thống đã chặn ghi đè.",true,true);
       }else{
         syncMessage("Chưa đồng bộ được mục "+key+": "+error.message+" · Hệ thống sẽ tự thử lại.",true);
-        if(version!==undefined && cloudSaveVersions.get(key)===version){
+        if(!cloudReloading && version!==undefined && cloudSaveVersions.get(key)===version){
           clearTimeout(cloudSaveTimers.get(key));
           cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value,version),5000));
         }
@@ -393,14 +398,23 @@ async function fetchCloudState(){
   return result;
 }
 async function reloadCloudData(){
-  if(!authToken || !cloudSyncReady) return;
+  if(!authToken || !cloudSyncReady || cloudReloading) return;
   if(cloudDirty.size && !confirm("Một số thay đổi trên thiết bị này chưa được đồng bộ. Tải dữ liệu mới nhất sẽ thay thế các thay đổi đó. Bạn có chắc muốn tiếp tục?")) return;
+  const token=authToken, epoch=cloudSessionEpoch, startingVersions=new Map(cloudSaveVersions);
+  cloudReloading=true;
   syncMessage("Đang tải dữ liệu mới nhất từ Cloudflare...");
   for(const timer of cloudSaveTimers.values()) clearTimeout(timer);
   cloudSaveTimers.clear();
   try{
     await Promise.all([...cloudSaveQueues.values()].map(task=>task.catch(()=>{})));
-    const result=await fetchCloudState();
+    if(epoch!==cloudSessionEpoch || token!==authToken) return;
+    const editedDuringReload=SYNC_KEYS.some(key=>(cloudSaveVersions.get(key)||0)!==(startingVersions.get(key)||0));
+    if(editedDuringReload){
+      syncMessage("Có chỉnh sửa mới trong lúc tải dữ liệu. Các thay đổi mới được giữ nguyên; hãy tải lại lần nữa khi sẵn sàng.",true,true);
+      return;
+    }
+    const result=await apiRequest("/api/state",{headers:{Authorization:"Bearer "+token}});
+    if(epoch!==cloudSessionEpoch || token!==authToken) return;
     cloudApplying=true;
     for(const key of SYNC_KEYS){
       if(Object.prototype.hasOwnProperty.call(result.state||{},key)) applyStateValue(key,result.state[key]);
@@ -411,13 +425,20 @@ async function reloadCloudData(){
     cloudApplying=false;
     renderAllData();
     syncMessage("Đã tải dữ liệu mới nhất từ Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
-  }catch(error){cloudApplying=false;syncMessage("Không tải được dữ liệu mới: "+error.message,true,true)}
+  }catch(error){
+    cloudApplying=false;
+    if(epoch===cloudSessionEpoch) syncMessage("Không tải được dữ liệu mới: "+error.message,true,true);
+  }finally{
+    if(epoch===cloudSessionEpoch) cloudReloading=false;
+  }
 }
 $("#syncReload").onclick=reloadCloudData;
 async function initializeCloudSync(){
+  const epoch=cloudSessionEpoch, token=authToken;
   syncMessage("Đang kiểm tra và đồng bộ dữ liệu...");
   try{
     const result=await fetchCloudState();
+    if(epoch!==cloudSessionEpoch || token!==authToken) return;
     const keys=Object.keys(result.state||{});
     cloudRevisions=result.revisions||{};
     cloudApplying=true;
@@ -430,9 +451,13 @@ async function initializeCloudSync(){
     cloudSyncReady=true;
     if(!keys.length){
       syncMessage("Đang chuyển dữ liệu hiện có trên trình duyệt lên Cloudflare...");
-      for(const key of SYNC_KEYS) if(!(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Chưa chuyển hết dữ liệu cũ lên máy chủ. Vui lòng kiểm tra kết nối rồi đăng nhập lại.");
+      for(const key of SYNC_KEYS){
+        if(epoch!==cloudSessionEpoch || token!==authToken) return;
+        if(!(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Chưa chuyển hết dữ liệu cũ lên máy chủ. Vui lòng kiểm tra kết nối rồi đăng nhập lại.");
+      }
     }else{
       for(const key of SYNC_KEYS){
+        if(epoch!==cloudSessionEpoch || token!==authToken) return;
         if(!Object.prototype.hasOwnProperty.call(result.state,key) && !(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Không thể khởi tạo nhóm dữ liệu "+key+".");
       }
     }
@@ -443,14 +468,17 @@ async function initializeCloudSync(){
     cloudPoller=setInterval(pollCloudState,20000);
   }catch(error){
     cloudApplying=false;
+    if(epoch!==cloudSessionEpoch || token!==authToken) return;
     cloudSyncReady=false;
     syncMessage("Không thể tải dữ liệu dùng chung: "+error.message,true);
   }
 }
 async function pollCloudState(){
   if(!authToken || !cloudSyncReady) return;
+  const epoch=cloudSessionEpoch, token=authToken;
   try{
     const result=await fetchCloudState();
+    if(epoch!==cloudSessionEpoch || token!==authToken) return;
     const changed=SYNC_KEYS.filter(key=>(result.revisions?.[key]||0)>(cloudRevisions[key]||0));
     if(!changed.length) return;
     if(cloudDirty.size){
@@ -465,10 +493,12 @@ async function pollCloudState(){
     cloudApplying=false;
     renderAllData();
     syncMessage("Đã nhận cập nhật mới từ thiết bị khác · "+new Date().toLocaleTimeString("vi-VN"));
-  }catch(error){cloudApplying=false;syncMessage("Mất kết nối đồng bộ tạm thời: "+error.message,true)}
+  }catch(error){if(epoch===cloudSessionEpoch){cloudApplying=false;syncMessage("Mất kết nối đồng bộ tạm thời: "+error.message,true)}}
 }
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible") pollCloudState()});
 async function enterSystem(user) {
+  cloudSessionEpoch++;
+  cloudReloading=false;
   signedInUser = user;
   document.body.classList.add("authenticated");
   document.body.classList.toggle("is-admin", user.role === "admin");
@@ -484,6 +514,8 @@ async function enterSystem(user) {
 
 function leaveSystem() {
   const oldToken = authToken;
+  cloudSessionEpoch++;
+  cloudReloading=false;
   authToken = "";
   signedInUser = null;
   sessionStorage.removeItem("jp_class_token");
@@ -492,6 +524,8 @@ function leaveSystem() {
   if(cloudPoller){clearInterval(cloudPoller);cloudPoller=null}
   for(const timer of cloudSaveTimers.values()) clearTimeout(timer);
   cloudSaveTimers.clear();
+  cloudSaveQueues.clear();
+  cloudSaveVersions.clear();
   cloudDirty.clear();
   cloudConflicts.clear();
   $("#loginGate").style.display = "grid";
