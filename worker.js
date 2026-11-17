@@ -188,7 +188,7 @@ export default {
         return json({ state, revisions, metadata }, 200, origin);
       }
 
-      const stateMatch = path.match(/^\\/api\\/state\\/([a-z]+)$/);
+      const stateMatch = path.match(/^\/api\/state\/([a-z]+)$/);
       if (stateMatch && request.method === "PUT") {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Bạn cần đăng nhập để lưu dữ liệu." }, 401, origin);
