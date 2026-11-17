@@ -394,6 +394,7 @@ async function initializeCloudSync(){
       }
     }
     cloudApplying=false;
+    cloudSyncReady=true;
     if(!keys.length){
       syncMessage("Đang chuyển dữ liệu hiện có trên trình duyệt lên Cloudflare...");
       for(const key of SYNC_KEYS) await saveCloudKey(key,currentStateValue(key));
@@ -419,7 +420,7 @@ async function pollCloudState(){
     const result=await fetchCloudState();
     const changed=SYNC_KEYS.filter(key=>(result.revisions?.[key]||0)>(cloudRevisions[key]||0));
     if(!changed.length) return;
-    if(cloudDirty.size || [...cloudSaveQueues.values()].some(p=>p)){
+    if(cloudDirty.size){
       syncMessage("Có thay đổi mới từ thiết bị khác. Hoàn tất lưu dữ liệu đang chỉnh sửa trước khi tải lại.",true);
       return;
     }
