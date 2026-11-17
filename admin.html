@@ -319,7 +319,7 @@ function rAtt(){
  const prev=classSelect.value;
  classSelect.innerHTML=cl.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");
  if(prev&&cl.some(c=>String(c.id)===prev))classSelect.value=prev;
- if(!dateInput.value)dateInput.value=new Date().toLocaleDateString("en-CA");
+ if(!dateInput.value){const now=new Date();dateInput.value=[now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-");}
  const c=cl.find(x=>String(x.id)===classSelect.value);
  if(!c){roster.innerHTML='<p class="empty">Hãy tạo lớp và xếp học viên trước khi điểm danh.</p>';$("#attSummary").textContent="";return}
  const date=dateInput.value, members=sts.filter(s=>c.m.some(id=>id==s.id));
