@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_tr_created ON test_results (created_at);
 
 -- Trạng thái dữ liệu quản trị dùng chung giữa các thiết bị.
 CREATE TABLE IF NOT EXISTS app_state (
-  state_key TEXT PRIMARY KEY CHECK (state_key IN ('cls', 'cl', 'sts', 'jr', 'mine', 'leads')),
+  state_key TEXT PRIMARY KEY CHECK (state_key IN ('cls', 'cl', 'sts', 'jr', 'mine', 'leads', 'att', 'lessons')),
   payload TEXT NOT NULL,
   revision INTEGER NOT NULL DEFAULT 1,
   updated_by TEXT,
