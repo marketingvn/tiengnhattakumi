@@ -373,11 +373,11 @@ $("#fCl").onsubmit=e=>{e.preventDefault();const o=fd(e.target);if(cl.some(c=>c.n
 
 function youtubeId(value){
  try{
-  const u=new URL(value.trim()),host=u.hostname.replace(/^www\\./,"").toLowerCase();
+  const u=new URL(value.trim()),host=u.hostname.replace(/^www\./,"").toLowerCase();
   if(host==="youtu.be")return u.pathname.split("/").filter(Boolean)[0]||"";
   if(["youtube.com","m.youtube.com","music.youtube.com"].includes(host)){
    if(u.pathname==="/watch")return u.searchParams.get("v")||"";
-   const m=u.pathname.match(/^\\/(?:embed|shorts|live)\\/([A-Za-z0-9_-]{6,})/);return m?m[1]:"";
+   const m=u.pathname.match(/^\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{6,})/);return m?m[1]:"";
   }
  }catch(e){}
  return "";
