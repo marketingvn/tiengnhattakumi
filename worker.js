@@ -193,10 +193,12 @@ export default {
         }
 
         const id = crypto.randomUUID();
+        // Tương thích cả schema cũ (full_name/course/note) và các cột mới.
         await env.DB.prepare(`
-          INSERT INTO registrations (id, name, phone, level, interested_class, goal)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(id, name, phone, level, interestedClass, goal).run();
+          INSERT INTO registrations
+            (id, full_name, phone, course, note, status, name, level, interested_class, goal)
+          VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?, ?)
+        `).bind(id, name, phone, level, goal, name, level, interestedClass, goal).run();
 
         return json({ ok: true, id, message: "Đã nhận đăng ký học thử." }, 201, origin);
       }
@@ -206,7 +208,13 @@ export default {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Bạn cần đăng nhập để xem danh sách đăng ký." }, 401, origin);
         const result = await env.DB.prepare(`
-          SELECT id, name, phone, level, interested_class, goal, created_at
+          SELECT id,
+                 COALESCE(name, full_name) AS name,
+                 phone,
+                 COALESCE(level, course, '') AS level,
+                 COALESCE(interested_class, '') AS interested_class,
+                 COALESCE(goal, note, '') AS goal,
+                 created_at
           FROM registrations ORDER BY created_at DESC LIMIT 300
         `).all();
         return json({ registrations: result.results || [] }, 200, origin);
