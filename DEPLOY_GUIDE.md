@@ -1,62 +1,62 @@
 # Nhật Ngữ Umitomo — Hướng dẫn cập nhật và triển khai
 
-## 1. Cấu trúc triển khai
-
-Bản này gồm ba phần tách biệt. Không đưa file SQL hoặc Worker API vào thư mục tài nguyên tĩnh của website.
+## 1. Các thành phần
 
 | Thành phần | File | Nơi triển khai |
 |---|---|---|
-| Website công khai | `index.html` và các tài nguyên công khai đi kèm trong repo | Cloudflare Worker `lophoctiengnhat` |
-| Trang quản trị | `admin.html`, `_headers` | Cùng Worker tài nguyên tĩnh `lophoctiengnhat` |
+| Website công khai + trang quản trị | `index.html`, `admin.html`, `_headers` và tài nguyên tĩnh | Cloudflare Worker `lophoctiengnhat` |
 | API + đồng bộ | `worker.js` | Cloudflare Worker `lophoctiengnhat-api` |
 | Cấu trúc dữ liệu | `schema.sql`, `migration_sync.sql` | Cloudflare D1 `lophoctiengnhat-db` |
 
-## 2. Trước khi cập nhật
+## 2. Sao lưu trước khi cập nhật
 
-1. Tải bản sao lưu hiện tại của mã nguồn và xuất dữ liệu D1 trước khi thay thế.
-2. Giữ nguyên tên D1 database `lophoctiengnhat-db` và binding `DB`.
-3. Không xóa hoặc tạo lại database. Dữ liệu học viên, lớp, lịch học, giáo viên và kết quả đang lưu trong D1.
+1. Tải bản sao lưu mã nguồn hiện tại.
+2. Xuất dữ liệu D1 hiện tại trước khi thay đổi cấu trúc bảng.
+3. Giữ nguyên database `lophoctiengnhat-db`, binding `DB` và các Worker Secrets.
+4. Không xóa database, không tạo database mới và không chạy lại toàn bộ `schema.sql` trên database đang có dữ liệu.
 
-## 3. Cập nhật website tĩnh
+## 3. Cập nhật D1 — thực hiện trước khi deploy code
 
-1. Mở Worker `lophoctiengnhat` trong Cloudflare.
-2. Cập nhật toàn bộ tài nguyên website từ thư mục gốc của repository, giữ nguyên cấu trúc thư mục.
-3. Đảm bảo `index.html`, `admin.html` và `_headers` được đưa lên cùng một phiên bản.
-4. Không tải `worker.js`, `schema.sql` hoặc `migration_sync.sql` vào thư mục tài nguyên tĩnh.
+Database đang sử dụng đã có bảng `app_state`, nhưng ràng buộc cũ chưa cho phép hai khóa dữ liệu mới `att` (điểm danh) và `lessons` (bài giảng YouTube).
+
+1. Mở D1 database `lophoctiengnhat-db` → Console.
+2. Mở file `migration_sync.sql` trong GitHub, sao chép toàn bộ nội dung và chạy một lần.
+3. Chỉ tiếp tục nếu câu lệnh chạy thành công. Migration giữ lại các bản ghi hiện có trong `app_state`; không xóa các dữ liệu lớp, học viên, lịch học hoặc tài khoản.
+4. Không chạy migration này lần thứ hai. Nếu gặp lỗi, dừng lại và gửi nguyên văn thông báo lỗi để kiểm tra; không tự xóa bảng.
+
+Với database cài mới hoàn toàn, chạy `schema.sql` thay cho migration trên.
 
 ## 4. Cập nhật API Worker
 
-1. Mở Worker `lophoctiengnhat-api`.
-2. Thay nội dung mã Worker bằng toàn bộ file `worker.js`.
-3. Kiểm tra D1 binding có tên chính xác là `DB`, trỏ đến `lophoctiengnhat-db`.
-4. Giữ nguyên các Worker Secrets hiện có. `BOOTSTRAP_SECRET` chỉ dùng để tạo tài khoản admin đầu tiên; không cần chạy lại bước tạo admin nếu tài khoản đã tồn tại.
+1. Mở Cloudflare Worker `lophoctiengnhat-api`.
+2. Thay mã hiện tại bằng toàn bộ nội dung file `worker.js` trên nhánh `main`.
+3. Kiểm tra D1 binding tên chính xác là `DB`, trỏ đến `lophoctiengnhat-db`.
+4. Giữ nguyên các Worker Secrets hiện có. Không chia sẻ `BOOTSTRAP_SECRET` hoặc mật khẩu quản trị.
 5. Deploy Worker API.
 
-## 5. Database
+## 5. Cập nhật website
 
-1. Trước khi cập nhật, xuất bản sao lưu D1 để có thể khôi phục nếu cần.
-2. Với database đang sử dụng, chạy nội dung file `migration_sync.sql` **một lần** trong D1 Console. Migration tạo lại riêng bảng `app_state`, giữ nguyên dữ liệu hiện có và bổ sung hai khóa `att` (điểm danh), `lessons` (bài giảng YouTube). Không xóa database và không chạy lại toàn bộ `schema.sql` trên database đang có dữ liệu.
-3. Với database cài mới, chạy `schema.sql`; không cần chạy `migration_sync.sql` sau đó.
-4. Chỉ triển khai `worker.js` sau khi migration hoàn tất thành công.
+1. Mở Cloudflare Worker `lophoctiengnhat`.
+2. Cập nhật các tài nguyên tĩnh từ repository, giữ nguyên cấu trúc thư mục.
+3. Đảm bảo `index.html`, `admin.html` và `_headers` thuộc cùng một phiên bản.
+4. Không tải `worker.js`, `schema.sql` hoặc `migration_sync.sql` vào thư mục tài nguyên tĩnh.
 
 ## 6. Kiểm tra sau triển khai
 
-Thực hiện theo thứ tự:
+1. Mở `https://lophoctiengnhat-api.haivouel.workers.dev/api/health`; kết quả mong đợi: `ok: true`, `database: "connected"`.
+2. Mở website công khai, kiểm tra trang chủ, các mục khóa học, tài liệu, lịch khai giảng, kiểm tra trình độ và bài giảng.
+3. Gửi thử một đăng ký học thử; kiểm tra đăng ký xuất hiện trong trang quản trị.
+4. Mở `/admin.html`, đăng nhập bằng tài khoản hiện có.
+5. Kiểm tra danh sách lớp, học viên, lịch học, điểm danh, nhật ký, đăng ký, kết quả và bài giảng.
+6. Thêm một video YouTube thử, chờ trạng thái đồng bộ thành công, sau đó kiểm tra video hiển thị trên trang công khai.
+7. Đánh dấu điểm danh thử, đăng xuất/đăng nhập lại và kiểm tra dữ liệu còn nguyên.
+8. Nếu có thể, đăng nhập ở trình duyệt thứ hai để xác nhận dữ liệu được đồng bộ giữa các thiết bị.
 
-1. Mở `https://lophoctiengnhat-api.haivouel.workers.dev/api/health`; kết quả mong đợi có `ok: true` và `database: "connected"`.
-2. Mở website công khai, kiểm tra trang chủ và gửi thử một đăng ký học thử.
-3. Mở `/admin.html`, đăng nhập bằng tài khoản hiện có.
-4. Kiểm tra danh sách giáo viên, học viên, lớp học, lịch học, đăng ký và kết quả kiểm tra.
-5. Tạo một thay đổi thử ở trang quản trị, chờ trạng thái báo đã đồng bộ; đăng nhập trên thiết bị/trình duyệt thứ hai để xác nhận dữ liệu xuất hiện.
-6. Thử đăng xuất và đăng nhập lại; xác nhận dữ liệu vẫn còn.
+## 7. Quyền truy cập và lưu ý
 
-## 7. Quyền truy cập
-
-- Giáo viên và admin dùng chung dữ liệu học vụ trên các thiết bị đã đăng nhập.
+- Giáo viên và admin sử dụng dữ liệu học vụ dùng chung sau khi đăng nhập.
 - Chỉ admin được tạo, xem danh sách và khóa/mở khóa tài khoản giáo viên.
 - Danh sách đăng ký, kết quả kiểm tra và dữ liệu quản trị yêu cầu đăng nhập.
-- Phiên đăng nhập có thời hạn 12 giờ; tài khoản bị khóa sẽ không thể tiếp tục sử dụng phiên cũ.
-
-## Lưu ý
-
-Kiểm tra cú pháp mã nguồn không thay thế kiểm thử thực tế trên tài khoản Cloudflare và D1. Chỉ xác nhận hoàn tất sau khi đã chạy đủ các bước kiểm tra ở mục 6.
+- Phiên đăng nhập có thời hạn 12 giờ.
+- Không chạy lại `schema.sql` hoặc `migration_sync.sql` tùy tiện trên database đang có dữ liệu.
+- Việc cập nhật GitHub không tự động triển khai Cloudflare. Chỉ xác nhận hoàn tất sau khi đã deploy và kiểm tra thực tế theo mục 6.
