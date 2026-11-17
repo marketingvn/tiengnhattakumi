@@ -177,6 +177,14 @@ export default {
       }
 
       // Dữ liệu quản trị dùng chung giữa mọi giáo viên và thiết bị.
+      if (path === "/api/public/lessons" && request.method === "GET") {
+        const row = await env.DB.prepare("SELECT payload FROM app_state WHERE state_key = 'lessons'").first();
+        let lessons = [];
+        try { lessons = row?.payload ? JSON.parse(row.payload) : []; } catch { lessons = []; }
+        if (!Array.isArray(lessons)) lessons = [];
+        return json({ lessons: lessons.filter(item => item && typeof item.title === "string" && typeof item.videoId === "string") }, 200, origin);
+      }
+
       if (path === "/api/state" && request.method === "GET") {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Bạn cần đăng nhập để đồng bộ dữ liệu." }, 401, origin);
@@ -197,7 +205,7 @@ export default {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Bạn cần đăng nhập để lưu dữ liệu." }, 401, origin);
         const key = stateMatch[1];
-        const allowed = new Set(["cls", "cl", "sts", "jr", "mine", "leads", "att"]);
+        const allowed = new Set(["cls", "cl", "sts", "jr", "mine", "leads", "att", "lessons"]);
         if (!allowed.has(key)) return json({ error: "Nhóm dữ liệu không hợp lệ." }, 404, origin);
         const body = await readBody(request);
         if (!body || !Array.isArray(body.data)) return json({ error: "Dữ liệu phải là một danh sách hợp lệ." }, 400, origin);
