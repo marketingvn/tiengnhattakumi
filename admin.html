@@ -440,11 +440,21 @@ async function initializeCloudSync(){
     const result=await fetchCloudState();
     if(epoch!==cloudSessionEpoch || token!==authToken) return;
     const keys=Object.keys(result.state||{});
+    const hadLocalClasses=localStorage.getItem("cl")!==null;
     cloudRevisions=result.revisions||{};
     cloudApplying=true;
     if(keys.length){
       for(const key of SYNC_KEYS){
         if(Object.prototype.hasOwnProperty.call(result.state,key)) applyStateValue(key,result.state[key]);
+      }
+      // Nếu máy chủ đã có lớp học nhưng chưa có danh mục lớp và trình duyệt
+      // này chưa từng lưu danh mục riêng, dựng lại danh mục từ dữ liệu lớp mới nhất.
+      if(Object.prototype.hasOwnProperty.call(result.state,"cls") &&
+         !Object.prototype.hasOwnProperty.call(result.state,"cl") && !hadLocalClasses){
+        cl=[...new Set(cls.map(c=>c.name))].map((name,index)=>({
+          id:index+1,name,level:"",type:"Nhóm",mode:"Online",max:6,fee:"",start:"",note:"",
+          m:sts.filter(student=>student.cls===name).map(student=>student.id)
+        }));
       }
     }
     cloudApplying=false;
