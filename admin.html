@@ -88,7 +88,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
   </div>
 </div>
 
-<header><nav id="nav"><a class="brand" href="#lop-hoc" aria-label="Quản trị">管理<small>Quản trị lớp học</small></a><button data-v="lop-hoc">Lớp học</button><button data-v="lich-hoc">Lịch học</button><button data-v="diem-danh">Điểm danh</button><button data-v="hoc-vien">Học viên</button><button data-v="nhat-ky">Nhật ký</button><button data-v="dang-ky-moi">Đăng ký học</button><button data-v="ket-qua">Kết quả test</button><button id="teacherNav" data-v="giao-vien">Quản lý giáo viên</button><span id="accountBar"><span id="accountName"></span><button class="btn sec sm" id="logoutBtn">Đăng xuất</button></span><a class="btn sec sm" href="../">Xem trang công khai</a></nav></header>
+<header><nav id="nav"><a class="brand" href="#lop-hoc" aria-label="Quản trị">管理<small>Quản trị lớp học</small></a><button data-v="lop-hoc">Lớp học</button><button data-v="lich-hoc">Lịch học</button><button data-v="diem-danh">Điểm danh</button><button data-v="hoc-vien">Học viên</button><button data-v="nhat-ky">Nhật ký</button><button data-v="dang-ky-moi">Đăng ký học</button><button data-v="ket-qua">Kết quả test</button><button data-v="bai-giang">Bài giảng</button><button id="teacherNav" data-v="giao-vien">Quản lý giáo viên</button><span id="accountBar"><span id="accountName"></span><button class="btn sec sm" id="logoutBtn">Đăng xuất</button></span><a class="btn sec sm" href="../">Xem trang công khai</a></nav></header>
 <main>
 
 
@@ -212,6 +212,21 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <div id="regTable"></div>
 </section>
 
+<section class="view" id="bai-giang">
+<h2>Quản lý bài giảng YouTube</h2>
+<p class="mu">Dán link YouTube, hệ thống tự nhận diện video và lấy ảnh thumbnail. Bài đã lưu sẽ hiển thị ở trang công khai.</p>
+<form id="lessonForm">
+<label class="wide">Tiêu đề bài giảng<input name="title" required maxlength="140" placeholder="Ví dụ: Ngữ pháp N5 – ～は～です"></label>
+<label>Link YouTube<input name="url" type="url" required placeholder="https://www.youtube.com/watch?v=..."></label>
+<label>Cấp độ<select name="level"><option>N5</option><option>N4</option><option>N3</option><option>N2</option><option>N1</option><option>Giao tiếp</option></select></label>
+<label class="wide">Mô tả (không bắt buộc)<textarea name="description" rows="2" maxlength="500" placeholder="Nội dung chính của video..."></textarea></label>
+<div class="wide" id="lessonPreview" hidden></div>
+<button class="btn" type="submit">Lưu bài giảng</button>
+</form>
+<p id="lessonMsg" class="mu" role="status" aria-live="polite"></p>
+<div class="grid g3" id="adminLessonList"></div>
+</section>
+
 <section class="view" id="ket-qua">
 <h2>Kết quả bài test</h2>
 <p class="mu">Kết quả học viên làm trên trang công khai, mới nhất ở trên.</p>
@@ -268,7 +283,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 </main>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const SYNC_KEYS=["cls","cl","sts","jr","mine","leads","att"];
+const SYNC_KEYS=["cls","cl","sts","jr","mine","leads","att","lessons"];
 let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null, cloudSessionEpoch=0, cloudReloading=false;
 const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudSaveVersions=new Map(), cloudDirty=new Set(), cloudConflicts=new Set();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
@@ -292,9 +307,9 @@ const endOf=c=>{if(c.end)return c.end;const [h,m]=c.time.split(":").map(Number),
 const sch=n=>{const l=cls.filter(c=>c.name===n).sort((a,b)=>DY.indexOf(a.day)-DY.indexOf(b.day)).map(c=>`${c.day} ${c.time}–${endOf(c)}`);return l.length?"Lịch: "+l.join(", "):""};
 let cls=ld("cls",[{id:1,name:"N5 – Lớp tối",day:"T2",time:"19:00",dur:90},{id:2,name:"N3 – 1 kèm 1",day:"T4",time:"20:00",dur:60},{id:3,name:"Giao tiếp",day:"T7",time:"09:00",dur:90}]);
 let sts=ld("sts",[{id:1,name:"Minh Anh",level:"N5",goal:"Thi N5 tháng 12",p:40},{id:2,name:"Quốc Bảo",level:"N3",goal:"Đi làm công ty Nhật",p:65}]);
-let jr=ld("jr",[]),leads=ld("leads",[]),att=ld("att",[]);
+let jr=ld("jr",[]),leads=ld("leads",[]),att=ld("att",[]),lessons=ld("lessons",[]);
 let cl=ld("cl",null);if(!cl)cl=[...new Set(cls.map(c=>c.name))].map((n,i)=>({id:i+1,name:n,level:"",type:"Nhóm",mode:"Online",max:6,fee:"",start:"",note:"",m:sts.filter(s=>s.cls===n).map(s=>s.id)}));
-const views=["lop-hoc","lich-hoc","diem-danh","hoc-vien","nhat-ky","dang-ky-moi","ket-qua","giao-vien"];
+const views=["lop-hoc","lich-hoc","diem-danh","hoc-vien","nhat-ky","dang-ky-moi","ket-qua","bai-giang","giao-vien"];
 function show(){let h=location.hash.slice(1);if(!views.includes(h))h="lop-hoc";$$(".view").forEach(v=>v.classList.toggle("on",v.id===h));$$("#nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===h));scrollTo(0,0)}
 $$("#nav button").forEach(b=>b.onclick=()=>location.hash=b.dataset.v);
 $$("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
@@ -355,7 +370,37 @@ $$("[data-o]").forEach(d=>d.ontoggle=()=>{d.open?op.add(d.dataset.o):op.delete(d
 $$("[data-k]").forEach(x=>x.onchange=()=>{const c=cl.find(c=>c.id==x.dataset.k);if(x.checked){if(c.max&&c.m.length>=c.max){x.checked=false;$("#clMsg").textContent="Lớp "+c.name+" đã đủ sĩ số tối đa.";return}c.m.push(+x.value)}else c.m=c.m.filter(i=>i!=x.value);$("#clMsg").textContent="";sv("cl",cl);rTT()});
 $$("[data-dc]").forEach(b=>b.onclick=()=>{const c=cl.find(c=>c.id==b.dataset.dc);cls=cls.filter(s=>s.name!==c.name);cl=cl.filter(x=>x.id!=c.id);sv("cl",cl);sv("cls",cls);rTT()})}
 $("#fCl").onsubmit=e=>{e.preventDefault();const o=fd(e.target);if(cl.some(c=>c.name===o.name)){$("#clMsg").textContent="Tên lớp đã tồn tại.";return}cl.push({id:id(),name:o.name,level:o.level,type:o.type,mode:o.mode,max:+o.max||0,fee:o.fee,start:o.start,note:o.note,m:[]});sv("cl",cl);$("#clMsg").textContent="";e.target.reset();rTT()};
-rTT();rSt();rAtt();rJr();rFc();rLd();show();
+
+function youtubeId(value){
+ try{
+  const u=new URL(value.trim()),host=u.hostname.replace(/^www\\./,"").toLowerCase();
+  if(host==="youtu.be")return u.pathname.split("/").filter(Boolean)[0]||"";
+  if(["youtube.com","m.youtube.com","music.youtube.com"].includes(host)){
+   if(u.pathname==="/watch")return u.searchParams.get("v")||"";
+   const m=u.pathname.match(/^\\/(?:embed|shorts|live)\\/([A-Za-z0-9_-]{6,})/);return m?m[1]:"";
+  }
+ }catch(e){}
+ return "";
+}
+function rLessons(){
+ const host=$("#adminLessonList");if(!host)return;
+ host.innerHTML=lessons.map((v,i)=>'<article class="card"><img src="https://img.youtube.com/vi/'+esc(v.videoId)+'/hqdefault.jpg" alt="" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px"><span class="chip">'+esc(v.level)+'</span><h3>'+esc(v.title)+'</h3><p class="mu">'+esc(v.description||"")+'</p><div class="acts"><a class="btn sec sm" href="https://www.youtube.com/watch?v='+encodeURIComponent(v.videoId)+'" target="_blank" rel="noopener">Xem video</a><button class="btn sec sm" type="button" data-lesson-delete="'+i+'">Xóa</button></div></article>').join("")||'<p class="mu">Chưa có video nào. Hãy thêm link YouTube ở trên.</p>';
+ host.querySelectorAll("[data-lesson-delete]").forEach(b=>b.onclick=()=>{const i=Number(b.dataset.lessonDelete);if(!confirm("Xóa bài giảng này?"))return;lessons.splice(i,1);sv("lessons",lessons);rLessons();});
+}
+const lessonUrl=$("#lessonForm [name=url]");
+if(lessonUrl)lessonUrl.addEventListener("input",()=>{
+ const vid=youtubeId(lessonUrl.value),box=$("#lessonPreview");
+ if(!vid){box.hidden=true;box.innerHTML="";return}
+ box.hidden=false;box.innerHTML='<p class="mu">Xem trước thumbnail</p><img src="https://img.youtube.com/vi/'+esc(vid)+'/hqdefault.jpg" alt="Thumbnail video" style="width:min(100%,420px);aspect-ratio:16/9;object-fit:cover;border-radius:12px">';
+});
+$("#lessonForm")?.addEventListener("submit",e=>{
+ e.preventDefault();const f=e.currentTarget,o=Object.fromEntries(new FormData(f)),videoId=youtubeId(o.url);
+ if(!videoId){$("#lessonMsg").textContent="Link YouTube chưa đúng. Hãy dùng link youtube.com/watch, youtu.be, Shorts hoặc Embed.";return}
+ lessons.unshift({id:Date.now().toString(),title:o.title.trim(),level:o.level,description:o.description.trim(),url:o.url.trim(),videoId,createdAt:new Date().toISOString()});
+ sv("lessons",lessons);f.reset();$("#lessonPreview").hidden=true;$("#lessonPreview").innerHTML="";$("#lessonMsg").textContent="Đã lưu bài giảng. Video sẽ xuất hiện trên trang công khai sau khi đồng bộ Cloudflare.";rLessons();
+});
+
+rTT();rSt();rAtt();rJr();rFc();rLd();rLessons();show();
 
 
 // Kết nối xác thực Cloudflare Worker API
@@ -373,7 +418,7 @@ async function apiRequest(path, options = {}) {
 }
 
 function currentStateValue(key){
-  return ({cls,cl,sts,jr,mine,leads,att})[key];
+  return ({cls,cl,sts,jr,mine,leads,att,lessons})[key];
 }
 function applyStateValue(key,value){
   if(!Array.isArray(value)) return;
@@ -384,10 +429,11 @@ function applyStateValue(key,value){
   else if(key==="mine") mine=value;
   else if(key==="leads") leads=value;
   else if(key==="att") att=value;
+  else if(key==="lessons") lessons=value;
   try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}
 }
 function renderAllData(){
-  rTT(); rSt(); rAtt(); rJr(); rFc(); rLd(); show();
+  rTT(); rSt(); rAtt(); rJr(); rFc(); rLd(); rLessons(); show();
 }
 async function saveCloudKey(key,value,version){
   const token=authToken, epoch=cloudSessionEpoch;
