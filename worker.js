@@ -69,11 +69,11 @@ function validUsername(username) {
 }
 
 function normalizePhone(value) {
-  return String(value || "").replace(/[\\s.()-]/g, "");
+  return String(value || "").replace(/[\s.()-]/g, "");
 }
 
 function validPhone(phone) {
-  return /^(\\+?84|0)\\d{9,10}$/.test(phone);
+  return /^(\+?84|0)\d{9,10}$/.test(phone);
 }
 
 async function readBody(request) {
@@ -226,7 +226,7 @@ export default {
         const total = Number(body.total);
 
         if (!name || !validPhone(phone)) return json({ error: "Thiếu hoặc sai họ tên, số điện thoại." }, 400, origin);
-        if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return json({ error: "Email không hợp lệ." }, 400, origin);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Email không hợp lệ." }, 400, origin);
         if (!TESTS.has(test)) return json({ error: "Loại bài kiểm tra không hợp lệ." }, 400, origin);
         if (!Number.isInteger(score) || !Number.isInteger(total) || total < 1 || total > 100 || score < 0 || score > total) {
           return json({ error: "Điểm số không hợp lệ." }, 400, origin);
@@ -295,7 +295,7 @@ export default {
         return json({ ok: true, id, message: "Đã tạo tài khoản giáo viên." }, 201, origin);
       }
 
-      const teacherMatch = path.match(/^\\/api\\/teachers\\/([^/]+)\\/status$/);
+      const teacherMatch = path.match(/^\/api\/teachers\/([^/]+)\/status$/);
       if (teacherMatch && request.method === "PATCH") {
         const user = await currentUser(request, env);
         if (!requireAdmin(user)) return json({ error: "Bạn không có quyền quản trị." }, 403, origin);
