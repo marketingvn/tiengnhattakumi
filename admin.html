@@ -90,7 +90,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 
 <header><nav id="nav"><a class="brand" href="#lop-hoc" aria-label="Quản trị">管理<small>Quản trị lớp học</small></a><button data-v="lop-hoc">Lớp học</button><button data-v="lich-hoc">Lịch học</button><button data-v="hoc-vien">Học viên</button><button data-v="nhat-ky">Nhật ký</button><button data-v="dang-ky-moi">Đăng ký học</button><button data-v="ket-qua">Kết quả test</button><button id="teacherNav" data-v="giao-vien">Quản lý giáo viên</button><span id="accountBar"><span id="accountName"></span><button class="btn sec sm" id="logoutBtn">Đăng xuất</button></span><a class="btn sec sm" href="../">Xem trang công khai</a></nav></header>
 <main>
-<p class="note" style="margin:0 0 16px">Đã kết nối đăng nhập và quản lý tài khoản qua Cloudflare. Lưu ý: dữ liệu lớp học, học viên, lịch và nhật ký ở phiên bản này vẫn lưu trên trình duyệt; chưa đồng bộ giữa giáo viên hoặc thiết bị.</p>
+
 
 <section class="view" id="gioi-thieu">
 <div class="hero">
@@ -252,7 +252,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <div id="leads"></div>
 </section>
 
-<p class="note" id="syncStatus" role="status" aria-live="polite" style="max-width:1000px;margin:0 auto 24px">Dữ liệu quản trị sẽ được đồng bộ lên Cloudflare khi đăng nhập.</p>
+<p class="note" id="syncStatus" role="status" aria-live="polite" style="max-width:1000px;margin:0 auto 24px">Đang chờ xác nhận đồng bộ dữ liệu từ Cloudflare...</p>
 </main>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -407,7 +407,7 @@ async function initializeCloudSync(){
     }
     cloudSyncReady=true;
     renderAllData();
-    syncMessage("Đã kết nối dữ liệu dùng chung trên Cloudflare. Các thiết bị sẽ tự kiểm tra cập nhật.");
+    syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
     if(cloudPoller) clearInterval(cloudPoller);
     cloudPoller=setInterval(pollCloudState,20000);
   }catch(error){
