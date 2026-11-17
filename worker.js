@@ -78,7 +78,11 @@ function validPhone(phone) {
 
 async function readBody(request) {
   try {
-    return await request.json();
+    const declared = Number(request.headers.get("Content-Length") || 0);
+    if (declared > 500000) return null;
+    const raw = await request.text();
+    if (!raw || raw.length > 500000) return null;
+    return JSON.parse(raw);
   } catch {
     return null;
   }
