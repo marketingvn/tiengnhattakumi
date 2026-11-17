@@ -484,6 +484,10 @@ function leaveSystem() {
   document.body.classList.remove("authenticated", "is-admin");
   cloudSyncReady=false;
   if(cloudPoller){clearInterval(cloudPoller);cloudPoller=null}
+  for(const timer of cloudSaveTimers.values()) clearTimeout(timer);
+  cloudSaveTimers.clear();
+  cloudDirty.clear();
+  cloudConflicts.clear();
   $("#loginGate").style.display = "grid";
   $("#loginForm").reset();
   $("#loginError").textContent = "Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại.";
