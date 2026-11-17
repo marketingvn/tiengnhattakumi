@@ -1,6 +1,6 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://lophoctiengnhat.haivouel.workers.dev",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Bootstrap-Secret",
   "Access-Control-Max-Age": "86400"
 };
@@ -170,6 +170,57 @@ export default {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Chưa đăng nhập hoặc phiên đã hết hạn." }, 401, origin);
         return json({ user }, 200, origin);
+      }
+
+      // Dữ liệu quản trị dùng chung giữa mọi giáo viên và thiết bị.
+      if (path === "/api/state" && request.method === "GET") {
+        const user = await currentUser(request, env);
+        if (!user) return json({ error: "Bạn cần đăng nhập để đồng bộ dữ liệu." }, 401, origin);
+        const result = await env.DB.prepare(
+          "SELECT state_key, payload, revision, updated_at, updated_by FROM app_state ORDER BY state_key"
+        ).all();
+        const state = {}, revisions = {}, metadata = {};
+        for (const row of (result.results || [])) {
+          try { state[row.state_key] = JSON.parse(row.payload); } catch { state[row.state_key] = []; }
+          revisions[row.state_key] = Number(row.revision) || 1;
+          metadata[row.state_key] = { updated_at: row.updated_at, updated_by: row.updated_by };
+        }
+        return json({ state, revisions, metadata }, 200, origin);
+      }
+
+      const stateMatch = path.match(/^\\/api\\/state\\/([a-z]+)$/);
+      if (stateMatch && request.method === "PUT") {
+        const user = await currentUser(request, env);
+        if (!user) return json({ error: "Bạn cần đăng nhập để lưu dữ liệu." }, 401, origin);
+        const key = stateMatch[1];
+        const allowed = new Set(["cls", "cl", "sts", "jr", "mine", "leads"]);
+        if (!allowed.has(key)) return json({ error: "Nhóm dữ liệu không hợp lệ." }, 404, origin);
+        const body = await readBody(request);
+        if (!body || !Array.isArray(body.data)) return json({ error: "Dữ liệu phải là một danh sách hợp lệ." }, 400, origin);
+        const payload = JSON.stringify(body.data);
+        if (payload.length > 400000) return json({ error: "Dữ liệu quá lớn. Vui lòng chia nhỏ hoặc dọn dữ liệu cũ." }, 413, origin);
+        const expected = body.revision;
+        let result;
+        if (expected === null || expected === undefined) {
+          result = await env.DB.prepare(
+            "INSERT INTO app_state (state_key, payload, revision, updated_by, updated_at) VALUES (?, ?, 1, ?, datetime('now')) ON CONFLICT(state_key) DO NOTHING"
+          ).bind(key, payload, user.id).run();
+          if (!result.meta?.changes) {
+            const current = await env.DB.prepare("SELECT revision, updated_at FROM app_state WHERE state_key = ?").bind(key).first();
+            return json({ error: "Có dữ liệu mới hơn trên máy chủ. Không thể ghi đè thay đổi của giáo viên khác.", conflict: true, revision: current?.revision || 1, updated_at: current?.updated_at || null }, 409, origin);
+          }
+          return json({ ok: true, key, revision: 1 }, 200, origin);
+        }
+        const revision = Number(expected);
+        if (!Number.isInteger(revision) || revision < 1) return json({ error: "Phiên bản dữ liệu không hợp lệ." }, 400, origin);
+        result = await env.DB.prepare(
+          "UPDATE app_state SET payload = ?, revision = revision + 1, updated_by = ?, updated_at = datetime('now') WHERE state_key = ? AND revision = ?"
+        ).bind(payload, user.id, key, revision).run();
+        if (!result.meta?.changes) {
+          const current = await env.DB.prepare("SELECT revision, updated_at FROM app_state WHERE state_key = ?").bind(key).first();
+          return json({ error: "Có dữ liệu mới hơn trên máy chủ. Hệ thống đã chặn ghi đè để bảo vệ dữ liệu.", conflict: true, revision: current?.revision || null, updated_at: current?.updated_at || null }, 409, origin);
+        }
+        return json({ ok: true, key, revision: revision + 1 }, 200, origin);
       }
 
       if (path === "/api/logout" && request.method === "POST") {
