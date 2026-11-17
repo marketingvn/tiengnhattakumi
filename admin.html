@@ -368,10 +368,12 @@ async function saveCloudKey(key,value){
       cloudRevisions[key]=result.revision;
       cloudDirty.delete(key);
       syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
+      return true;
     }catch(error){
       if(error.message.includes("dữ liệu mới hơn") || error.message.includes("ghi đè") || error.message.includes("máy chủ")){
         syncMessage("Phát hiện thay đổi từ thiết bị khác ở mục "+key+". Đã chặn ghi đè; hãy tải lại dữ liệu mới nhất.",true);
       }else syncMessage("Chưa đồng bộ được mục "+key+": "+error.message,true);
+      return false;
     }
   });
   cloudSaveQueues.set(key,task);
@@ -397,10 +399,10 @@ async function initializeCloudSync(){
     cloudSyncReady=true;
     if(!keys.length){
       syncMessage("Đang chuyển dữ liệu hiện có trên trình duyệt lên Cloudflare...");
-      for(const key of SYNC_KEYS) await saveCloudKey(key,currentStateValue(key));
+      for(const key of SYNC_KEYS) if(!(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Chưa chuyển hết dữ liệu cũ lên máy chủ. Vui lòng kiểm tra kết nối rồi đăng nhập lại.");
     }else{
       for(const key of SYNC_KEYS){
-        if(!Object.prototype.hasOwnProperty.call(result.state,key)) await saveCloudKey(key,currentStateValue(key));
+        if(!Object.prototype.hasOwnProperty.call(result.state,key) && !(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Không thể khởi tạo nhóm dữ liệu "+key+".");
       }
     }
     cloudSyncReady=true;
