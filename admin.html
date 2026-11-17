@@ -375,7 +375,13 @@ async function saveCloudKey(key,value,version){
       if(error.message.includes("dữ liệu mới hơn") || error.message.includes("ghi đè") || error.message.includes("máy chủ")){
         cloudConflicts.add(key);
         syncMessage("Phát hiện dữ liệu mới hơn từ thiết bị khác ở mục "+key+". Hệ thống đã chặn ghi đè.",true,true);
-      }else syncMessage("Chưa đồng bộ được mục "+key+": "+error.message,true);
+      }else{
+        syncMessage("Chưa đồng bộ được mục "+key+": "+error.message+" · Hệ thống sẽ tự thử lại.",true);
+        if(version!==undefined && cloudSaveVersions.get(key)===version){
+          clearTimeout(cloudSaveTimers.get(key));
+          cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value,version),5000));
+        }
+      }
       return false;
     }
   });
