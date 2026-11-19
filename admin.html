@@ -69,7 +69,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 .auth-note{border-left:4px solid #b7791f;padding:10px 14px;background:var(--sf);border-radius:8px;margin:12px 0 20px}
 
 #resTable{overflow-x:auto}#resTable table{min-width:720px}#resTable details{border:0;padding:0;margin:0;background:none}
-</style>
+.role-picker{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.role-picker .btn{flex:1;min-width:140px}[hidden]{display:none!important}</style>
 </head>
 <body>
 
@@ -77,7 +77,9 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
   <div class="login-card">
     <div class="brand" style="font-family:'Noto Serif JP',serif;font-weight:900;color:var(--ac);font-size:1.2rem">Nhật Ngữ Umitomo</div>
     <h1>Đăng nhập hệ thống</h1>
-    <p class="mu">Sử dụng tài khoản Admin hoặc tài khoản giáo viên được cấp.</p>
+    <p class="mu">Vui lòng chọn vai trò của bạn.</p>
+    <div id="loginRolePicker" class="role-picker"><button type="button" class="btn sec" id="chooseTeacher">Giáo viên / Admin</button><button type="button" class="btn" id="chooseStudent">Học viên</button></div>
+    <div id="teacherLoginPanel" hidden><p class="mu">Đăng nhập với tài khoản Giáo viên hoặc Admin.</p>
     <form id="loginForm" method="post" action="/admin.html" autocomplete="on">
       <label>Tên đăng nhập<input name="username" autocomplete="username" required></label>
       <label>Mật khẩu<input name="password" type="password" autocomplete="current-password" required></label>
@@ -85,6 +87,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
     </form>
     <p id="loginError" role="status" aria-live="polite"></p>
     <p class="mu" style="font-size:.8rem">Nếu chưa có tài khoản, liên hệ quản trị viên.</p>
+    </div>
   </div>
 </div>
 
@@ -92,6 +95,8 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 (() => {
   const form = document.getElementById("loginForm");
   if (!form) return;
+  document.getElementById("chooseTeacher").addEventListener("click",()=>{document.getElementById("loginRolePicker").hidden=true;document.getElementById("teacherLoginPanel").hidden=false;form.elements.username.focus()});
+  document.getElementById("chooseStudent").addEventListener("click",()=>{location.href="/#hoc-vien"});
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = document.getElementById("loginBtn");
@@ -345,11 +350,11 @@ $$("[data-so]").forEach(d=>d.ontoggle=()=>{d.open?op.add(d.dataset.so):op.delete
 $$("[data-student-account]").forEach(f=>f.onsubmit=async e=>{e.preventDefault();if(!signedInUser||signedInUser.role!=="admin")return;const sid=f.dataset.studentAccount,msg=$(`[data-account-msg="${sid}"]`),o=Object.fromEntries(new FormData(f));msg.textContent="Đang tạo tài khoản…";try{await apiRequest("/api/students",{method:"POST",body:JSON.stringify({student_ref:sid,username:o.username,password:o.password})});msg.textContent="Đã tạo tài khoản. Gửi thông tin đăng nhập cho học viên.";f.reset()}catch(err){msg.textContent=err.message}});
 $$("[data-sc]").forEach(x=>x.onchange=()=>{const c=cl.find(c=>c.id==x.value),sid=+x.dataset.sc;if(x.checked){if(c.max&&c.m.length>=c.max){x.checked=false;$("#stMsg").textContent="Lớp "+c.name+" đã đủ sĩ số tối đa.";return}c.m.push(sid)}else c.m=c.m.filter(i=>i!=sid);$("#stMsg").textContent="";sv("cl",cl);rTT()});
 
-const fv=$("#jrF").value,ot=sts.map(s=>`<option>${esc(s.name)}</option>`).join("");$("#jrSt").innerHTML=ot;$("#jrF").innerHTML='<option value="">Tất cả học viên</option>'+ot;$("#jrF").value=fv}
+const fv=$("#jrF").value,ot=sts.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");$("#jrSt").innerHTML=ot;$("#jrF").innerHTML='<option value="">Tất cả học viên</option>'+ot;$("#jrF").value=fv}
 $("#fSt").onsubmit=e=>{e.preventDefault();const o=fd(e.target),ids=[...e.target.querySelectorAll("input[name=cls]:checked")].map(x=>x.value),st={id:id(),p:0,name:o.name,level:o.level,goal:o.goal},full=[];sts.push(st);ids.forEach(v=>{const c=cl.find(c=>c.id==v);if(c.max&&c.m.length>=c.max)full.push(c.name);else c.m.push(st.id)});sv("sts",sts);sv("cl",cl);e.target.reset();rTT();$("#stMsg").textContent=full.length?"Chưa thêm vào lớp đủ sĩ số: "+full.join(", "):""};
-function rJr(){const f=$("#jrF").value;$("#jrList").innerHTML=jr.filter(j=>!f||j.st===f).slice().sort((a,b)=>b.date.localeCompare(a.date)).map(j=>`<div class="entry"><button class="x" data-j="${j.id}" aria-label="Xóa">×</button><b>${esc(j.date)} · ${esc(j.st)}</b><br>${esc(j.text)}${j.hw?`<br><span class="mu">Bài tập: ${esc(j.hw)}</span>`:""}</div>`).join("")||'<p class="empty">Chưa có nhật ký. Ghi lại buổi học đầu tiên ở trên.</p>';
+function rJr(){const f=$("#jrF").value;$("#jrList").innerHTML=jr.filter(j=>!f||String(j.studentId||"")===f||(!j.studentId&&j.st===((sts.find(s=>String(s.id)===f)||{}).name))).slice().sort((a,b)=>b.date.localeCompare(a.date)).map(j=>`<div class="entry"><button class="x" data-j="${j.id}" aria-label="Xóa">×</button><b>${esc(j.date)} · ${esc(j.st)}</b><br>${esc(j.text)}${j.hw?`<br><span class="mu">Bài tập: ${esc(j.hw)}</span>`:""}</div>`).join("")||'<p class="empty">Chưa có nhật ký. Ghi lại buổi học đầu tiên ở trên.</p>';
 $$("[data-j]").forEach(b=>b.onclick=()=>{jr=jr.filter(j=>j.id!=b.dataset.j);sv("jr",jr);rJr()})}
-$("#fJr").onsubmit=e=>{e.preventDefault();const o=fd(e.target);jr.push({id:id(),date:o.date,st:o.st,text:o.text,hw:o.hw});sv("jr",jr);rJr();e.target.reset()};
+$("#fJr").onsubmit=e=>{e.preventDefault();const o=fd(e.target),student=sts.find(s=>String(s.id)===String(o.st));if(!student)return;jr.push({id:id(),date:o.date,st:student.name,studentId:student.id,text:o.text,hw:o.hw});sv("jr",jr);rJr();e.target.reset()};
 const W=[["こんにちは","konnichiwa","Xin chào"],["ありがとう","arigatou","Cảm ơn"],["学生","gakusei","Học sinh"],["先生","sensei","Giáo viên"],["勉強","benkyou","Học tập"],["友達","tomodachi","Bạn bè"],["食べる","taberu","Ăn"],["水","mizu","Nước"],["今日","kyou","Hôm nay"],["仕事","shigoto","Công việc"],["電車","densha","Tàu điện"],["病院","byouin","Bệnh viện"],["図書館","toshokan","Thư viện"],["会社","kaisha","Công ty"],["旅行","ryokou","Du lịch"],["天気","tenki","Thời tiết"],["家族","kazoku","Gia đình"],["約束","yakusoku","Cuộc hẹn, lời hứa"],["経験","keiken","Kinh nghiệm"],["準備","junbi","Chuẩn bị"]];
 let wi=0,fl=false,mine=ld("mine",[]);
 let att=ld("att",[]),lessons=ld("lessons",[]);

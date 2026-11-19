@@ -161,6 +161,21 @@ export default {
         await env.DB.prepare("INSERT INTO student_sessions(id,student_account_id,expires_at) VALUES(?,?,?)").bind(hash,student.id,expires).run();
         return json({ok:true,token,expires_at:expires,student:{full_name:student.full_name,username:student.username}},200,origin);
       }
+      if (path === "/api/student/portal" && request.method === "GET") {
+        const student=await currentStudent(request,env); if(!student) return json({error:"Phiên học viên đã hết hạn. Vui lòng đăng nhập lại."},401,origin);
+        const rows=await env.DB.prepare("SELECT state_key,payload FROM app_state WHERE state_key IN ('cls','cl','jr','att','sts')").all();
+        const state={};for(const row of rows.results||[]){try{state[row.state_key]=JSON.parse(row.payload)}catch{state[row.state_key]=[]}}
+        const list=k=>Array.isArray(state[k])?state[k]:[];
+        const classes=list("cl"),weekly=list("cls"),students=list("sts"),journal=list("jr"),attendanceRows=list("att"),ref=String(student.student_ref),name=String(student.full_name);
+        const memberClasses=classes.filter(c=>Array.isArray(c.m)&&c.m.some(id=>String(id)===ref));
+        const names=new Set(memberClasses.map(c=>String(c.name)));
+        const days=["T2","T3","T4","T5","T6","T7","CN"];
+        const schedule=weekly.filter(x=>names.has(String(x.name))).map(x=>{const c=memberClasses.find(v=>String(v.name)===String(x.name))||{};return {class_name:x.name,day:x.day||"",time:x.time||"",end:x.end||"",dur:x.dur||"",mode:c.mode||"",type:c.type||"",note:c.note||""}}).sort((a,b)=>days.indexOf(a.day)-days.indexOf(b.day)||String(a.time).localeCompare(String(b.time)));
+        const sameNameCount=students.filter(x=>String(x.name)===name).length;
+        const journalForStudent=journal.filter(x=>String(x.studentId||"")===ref||(!x.studentId&&sameNameCount===1&&String(x.st)===name)).map(x=>({date:String(x.date||""),text:String(x.text||""),hw:String(x.hw||"")})).sort((a,b)=>b.date.localeCompare(a.date));
+        const attendance=attendanceRows.filter(x=>String(x.studentId)===ref && /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x.date||"")) && ["present","absent"].includes(x.status)).map(x=>({date:x.date,status:x.status}));
+        return json({student:{full_name:name,username:student.username},schedule,journal:journalForStudent,attendance},200,origin);
+      }
       if (path === "/api/student/attendance" && request.method === "GET") {
         const student=await currentStudent(request,env); if(!student) return json({error:"Phiên học viên đã hết hạn. Vui lòng đăng nhập lại."},401,origin);
         const row=await env.DB.prepare("SELECT payload FROM app_state WHERE state_key='att'").first(); let all=[]; try{all=row?.payload?JSON.parse(row.payload):[]}catch{}
