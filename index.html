@@ -152,6 +152,8 @@ $$("[data-v]").forEach(b=>b.onclick=()=>location.hash=b.dataset.v);
 $("#mb").onclick=()=>{const d=$("#drawer").classList.toggle("on");$("#mb").setAttribute("aria-expanded",d)};
 $$("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
 addEventListener("hashchange",show);
+// Hiển thị trang hiện tại trước khi khởi tạo các tiện ích phụ.
+show();
 async function loadPublicLessons(){
  const host=$("#publicLessons");if(!host)return;
  try{
