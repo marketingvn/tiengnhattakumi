@@ -60,6 +60,11 @@ async function currentUser(request, env) {
   `).bind(tokenHash, now).first();
 }
 
+async function currentStudent(request, env) {
+  const token = getToken(request); if (!token) return null;
+  const hash = await sha256(token), now = Math.floor(Date.now()/1000);
+  return env.DB.prepare("SELECT a.id, a.student_ref, a.username, a.full_name, a.status FROM student_sessions s JOIN student_accounts a ON a.id=s.student_account_id WHERE s.id=? AND s.expires_at>? AND a.status='active'").bind(hash,now).first();
+}
 function requireAdmin(user) {
   return !!user && user.role === "admin";
 }
@@ -145,6 +150,43 @@ export default {
           VALUES (?, ?, ?, ?, 'admin', 'active')
         `).bind(id, username, await makePassword(password), fullName).run();
         return json({ ok: true, message: "Đã tạo tài khoản quản trị thành công.", username }, 201, origin);
+      }
+
+      if (path === "/api/student/login" && request.method === "POST") {
+        const body=await readBody(request); if(!body) return json({error:"Thông tin đăng nhập không hợp lệ."},400,origin);
+        const username=String(body.username||"").trim(), password=String(body.password||"");
+        const student=await env.DB.prepare("SELECT * FROM student_accounts WHERE username=?").bind(username).first();
+        if(!student || student.status!=="active" || !(await verifyPassword(password,student.password_hash))) return json({error:"Tên đăng nhập hoặc mật khẩu không đúng."},401,origin);
+        const token=crypto.randomUUID()+crypto.randomUUID(), hash=await sha256(token), expires=Math.floor(Date.now()/1000)+43200;
+        await env.DB.prepare("INSERT INTO student_sessions(id,student_account_id,expires_at) VALUES(?,?,?)").bind(hash,student.id,expires).run();
+        return json({ok:true,token,expires_at:expires,student:{full_name:student.full_name,username:student.username}},200,origin);
+      }
+      if (path === "/api/student/attendance" && request.method === "GET") {
+        const student=await currentStudent(request,env); if(!student) return json({error:"Phiên học viên đã hết hạn. Vui lòng đăng nhập lại."},401,origin);
+        const row=await env.DB.prepare("SELECT payload FROM app_state WHERE state_key='att'").first(); let all=[]; try{all=row?.payload?JSON.parse(row.payload):[]}catch{}
+        if(!Array.isArray(all)) all=[];
+        const attendance=all.filter(x=>String(x.studentId)===String(student.student_ref) && /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x.date||"")) && ["present","absent"].includes(x.status)).map(x=>({date:x.date,status:x.status}));
+        return json({student:{full_name:student.full_name,username:student.username},attendance},200,origin);
+      }
+      if (path === "/api/student/logout" && request.method === "POST") {
+        const token=getToken(request); if(token) await env.DB.prepare("DELETE FROM student_sessions WHERE id=?").bind(await sha256(token)).run();
+        return json({ok:true},200,origin);
+      }
+      if (path === "/api/students" && request.method === "GET") {
+        const user=await currentUser(request,env); if(!user) return json({error:"Cần đăng nhập tài khoản giáo viên."},401,origin);
+        const result=await env.DB.prepare("SELECT student_ref,username,full_name,status,created_at FROM student_accounts ORDER BY created_at DESC").all();
+        return json({students:result.results||[]},200,origin);
+      }
+      if (path === "/api/students" && request.method === "POST") {
+        const user=await currentUser(request,env); if(!requireAdmin(user)) return json({error:"Chỉ Admin được tạo tài khoản học viên."},403,origin);
+        const body=await readBody(request); if(!body) return json({error:"Dữ liệu không hợp lệ."},400,origin);
+        const ref=String(body.student_ref||"").trim(), username=String(body.username||"").trim(), password=String(body.password||"");
+        if(!ref || !validUsername(username) || password.length<12) return json({error:"Vui lòng nhập mã học viên, tên đăng nhập hợp lệ và mật khẩu ít nhất 12 ký tự."},400,origin);
+        const state=await env.DB.prepare("SELECT payload FROM app_state WHERE state_key='sts'").first(); let list=[]; try{list=state?.payload?JSON.parse(state.payload):[]}catch{}
+        const record=Array.isArray(list)?list.find(x=>String(x.id)===ref):null; if(!record) return json({error:"Không tìm thấy học viên. Hãy đồng bộ danh sách học viên trước."},404,origin);
+        const id=crypto.randomUUID(), fullName=String(record.name||"Học viên").slice(0,100), hash=await makePassword(password);
+        await env.DB.prepare("INSERT INTO student_accounts(id,student_ref,username,password_hash,full_name,status) VALUES(?,?,?,?,?,'active') ON CONFLICT(student_ref) DO UPDATE SET username=excluded.username,password_hash=excluded.password_hash,full_name=excluded.full_name,status='active'").bind(id,ref,username,hash,fullName).run();
+        return json({ok:true,message:"Đã tạo hoặc cập nhật tài khoản học viên."},201,origin);
       }
 
       if (path === "/api/login" && request.method === "POST") {
