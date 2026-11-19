@@ -165,7 +165,7 @@ export default {
         const student=await currentStudent(request,env); if(!student) return json({error:"Phiên học viên đã hết hạn. Vui lòng đăng nhập lại."},401,origin);
         const row=await env.DB.prepare("SELECT payload FROM app_state WHERE state_key='att'").first(); let all=[]; try{all=row?.payload?JSON.parse(row.payload):[]}catch{}
         if(!Array.isArray(all)) all=[];
-        const attendance=all.filter(x=>String(x.studentId)===String(student.student_ref) && /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x.date||"")) && ["present","absent"].includes(x.status)).map(x=>({date:x.date,status:x.status}));
+        const attendance=all.filter(x=>String(x.studentId)===String(student.student_ref) && /^\d{4}-\d{2}-\d{2}$/.test(String(x.date||"")) && ["present","absent"].includes(x.status)).map(x=>({date:x.date,status:x.status}));
         return json({student:{full_name:student.full_name,username:student.username},attendance},200,origin);
       }
       if (path === "/api/student/logout" && request.method === "POST") {
