@@ -468,7 +468,7 @@ async function saveCloudKey(key,value,version){
     }
   });
   cloudSaveQueues.set(key,task);
-  await task;
+  return await task;
 }
 async function fetchCloudState(){
   const result=await apiRequest("/api/state");
