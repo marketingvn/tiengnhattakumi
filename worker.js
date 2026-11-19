@@ -212,6 +212,41 @@ export default {
         }, 200, origin);
       }
 
+      if (path === "/api/change-password" && request.method === "POST") {
+        const user = await currentUser(request, env);
+        if (!user) return json({ error: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." }, 401, origin);
+        if (user.role !== "admin") return json({ error: "Chỉ quản trị viên mới được đổi mật khẩu tại đây." }, 403, origin);
+
+        const body = await readBody(request);
+        if (!body) return json({ error: "Dữ liệu gửi lên không hợp lệ." }, 400, origin);
+        const currentPassword = String(body.current_password || "");
+        const newPassword = String(body.new_password || "");
+        if (newPassword.length < 12 || newPassword.length > 128) {
+          return json({ error: "Mật khẩu mới phải từ 12 đến 128 ký tự." }, 400, origin);
+        }
+        if (newPassword === currentPassword) {
+          return json({ error: "Mật khẩu mới phải khác mật khẩu hiện tại." }, 400, origin);
+        }
+
+        const account = await env.DB.prepare(
+          "SELECT id, password_hash FROM teachers WHERE id = ? AND role = 'admin' AND status = 'active'"
+        ).bind(user.id).first();
+        if (!account || !(await verifyPassword(currentPassword, account.password_hash))) {
+          return json({ error: "Mật khẩu hiện tại không chính xác." }, 401, origin);
+        }
+
+        const newHash = await makePassword(newPassword);
+        const token = crypto.randomUUID() + crypto.randomUUID();
+        const tokenHash = await sha256(token);
+        const expires = Math.floor(Date.now() / 1000) + 43200;
+        await env.DB.batch([
+          env.DB.prepare("UPDATE teachers SET password_hash = ? WHERE id = ? AND role = 'admin'").bind(newHash, user.id),
+          env.DB.prepare("DELETE FROM sessions WHERE teacher_id = ?").bind(user.id),
+          env.DB.prepare("INSERT INTO sessions (id, teacher_id, expires_at) VALUES (?, ?, ?)").bind(tokenHash, user.id, expires)
+        ]);
+        return json({ ok: true, token, expires_at: expires }, 200, origin);
+      }
+
       if (path === "/api/me" && request.method === "GET") {
         const user = await currentUser(request, env);
         if (!user) return json({ error: "Chưa đăng nhập hoặc phiên đã hết hạn." }, 401, origin);
