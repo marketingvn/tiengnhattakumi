@@ -26,6 +26,7 @@ Database đang sử dụng đã có bảng `app_state`, nhưng ràng buộc cũ 
 
 Với database cài mới hoàn toàn, chạy `schema.sql` thay cho migration trên.
 
+\n## 3A. Bổ sung tài khoản học viên (lần cập nhật 19/11/2026)\n\nSau khi đã có bảng app_state và khóa dữ liệu att, chạy thêm migration riêng này đúng một lần:\n\n1. Mở D1 database lophoctiengnhat-db → Console.\n2. Mở file migration_student_accounts.sql trên GitHub, sao chép toàn bộ SQL và chạy.\n3. Migration chỉ tạo hai bảng student_accounts và student_sessions; không xóa hoặc sửa dữ liệu học viên/điểm danh hiện có.\n4. Chỉ deploy worker.js sau khi migration chạy thành công. Không chạy lại schema.sql trên database đang sử dụng.\n
 ## 4. Cập nhật API Worker
 
 1. Mở Cloudflare Worker `lophoctiengnhat-api`.
