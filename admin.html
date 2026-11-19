@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Đăng nhập & quản trị – Nhật Ngữ Umitomo</title><meta name="robots" content="noindex,nofollow">
+<title>Đăng nhập & quản trị – Nhật Ngữ Takumi</title><meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600;900&family=Be+Vietnam+Pro:wght@400;500;600&display=swap">
 <style>
-:root{--bg:#ffffff;--sf:#f1f7f8;--tx:#243746;--mu:#647987;--ln:#dce7eb;--ac:#245b78;--ac2:#19465f;--ok:#3d8793;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#172b36;--sf:#203a46;--tx:#f1f7f8;--mu:#bdcdd2;--ln:#3b5863;--ac:#75b8c0;--ac2:#559aa5;--ok:#75c5b1}}
-:root[data-theme="dark"]{--bg:#102b3d;--sf:#16384e;--tx:#eef8ff;--mu:#b3cbd9;--ln:#31556b;--ac:#4bb6e8;--ac2:#2499d0;--ok:#63d2b0}
+:root{--bg:#ffffff;--sf:#f8f7f5;--tx:#23262b;--mu:#5b616b;--ln:#e6e3df;--ac:#c8102e;--ac2:#2b2e34;--ok:#4a4e56;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181c;--sf:#1f2227;--tx:#eceef2;--mu:#a1a9b8;--ln:#323947;--ac:#ff5468;--ac2:#d9dce1;--ok:#5fcf93}}
+:root[data-theme="dark"]{--bg:#16181c;--sf:#1f2227;--tx:#eceef2;--mu:#a1a9b8;--ln:#323947;--ac:#ff5468;--ac2:#d9dce1;--ok:#5fcf93}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 "Be Vietnam Pro",system-ui,sans-serif}
-h1,h2,h3{font-family:"Be Vietnam Pro",system-ui,sans-serif;line-height:1.25;margin:0 0 .5em}
+h1,h2,h3{font-family:"Noto Serif JP","Be Vietnam Pro",serif;line-height:1.25;margin:0 0 .5em}
 header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);border-bottom:1px solid var(--ln);z-index:5}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
 nav{display:flex;gap:4px;overflow-x:auto;padding:8px 16px;max-width:1000px;margin:auto;align-items:center}
@@ -69,13 +69,13 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 .auth-note{border-left:4px solid #b7791f;padding:10px 14px;background:var(--sf);border-radius:8px;margin:12px 0 20px}
 
 #resTable{overflow-x:auto}#resTable table{min-width:720px}#resTable details{border:0;padding:0;margin:0;background:none}
-.att-toolbar{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:12px;max-width:640px;margin:18px 0}.att-summary{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.att-summary span{background:var(--sf);border:1px solid var(--ln);border-radius:9px;padding:8px 13px;color:var(--tx);font-size:.92rem}.att-roster{border:1px solid var(--ln);border-radius:12px;overflow:hidden}.att-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 16px;background:var(--bg);border-bottom:1px solid var(--ln)}.att-row:last-child{border-bottom:0}.att-row small{display:block;color:var(--mu);font-size:.82rem}.att-actions{display:flex;gap:8px}.att-choice{border:1px solid var(--ln);border-radius:8px;padding:8px 14px;background:var(--sf);color:var(--tx);font:inherit;font-size:.9rem;cursor:pointer}.att-choice.present.selected{background:#e6f2f3;border-color:#3d8793;color:#245b78;font-weight:600}.att-choice.absent.selected{background:#edf0f2;border-color:#647987;color:#243746;font-weight:600}@media(max-width:560px){.att-toolbar{grid-template-columns:1fr}.att-row{align-items:flex-start;flex-direction:column}.att-actions{width:100%}.att-choice{flex:1}}</style>
+</style>
 </head>
 <body>
 
 <div id="loginGate">
   <div class="login-card">
-    <div class="brand" style="font-family:'Noto Serif JP',serif;font-weight:900;color:var(--ac);font-size:1.2rem">Nhật Ngữ Umitomo</div>
+    <div class="brand" style="font-family:'Noto Serif JP',serif;font-weight:900;color:var(--ac);font-size:1.2rem">Nhật Ngữ Takumi</div>
     <h1>Đăng nhập hệ thống</h1>
     <p class="mu">Sử dụng tài khoản Admin hoặc tài khoản giáo viên được cấp.</p>
     <form id="loginForm">
@@ -88,7 +88,7 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
   </div>
 </div>
 
-<header><nav id="nav"><a class="brand" href="#lop-hoc" aria-label="Quản trị">管理<small>Quản trị lớp học</small></a><button data-v="lop-hoc">Lớp học</button><button data-v="lich-hoc">Lịch học</button><button data-v="diem-danh">Điểm danh</button><button data-v="hoc-vien">Học viên</button><button data-v="nhat-ky">Nhật ký</button><button data-v="dang-ky-moi">Đăng ký học</button><button data-v="ket-qua">Kết quả test</button><button data-v="bai-giang">Bài giảng</button><button id="teacherNav" data-v="giao-vien">Quản lý giáo viên</button><span id="accountBar"><span id="accountName"></span><button class="btn sec sm" id="logoutBtn">Đăng xuất</button></span><a class="btn sec sm" href="../">Xem trang công khai</a></nav></header>
+<header><nav id="nav"><a class="brand" href="#lop-hoc" aria-label="Quản trị">管理<small>Quản trị lớp học</small></a><button data-v="lop-hoc">Lớp học</button><button data-v="lich-hoc">Lịch học</button><button data-v="hoc-vien">Học viên</button><button data-v="nhat-ky">Nhật ký</button><button data-v="dang-ky-moi">Đăng ký học</button><button data-v="ket-qua">Kết quả test</button><button id="teacherNav" data-v="giao-vien">Quản lý giáo viên</button><span id="accountBar"><span id="accountName"></span><button class="btn sec sm" id="logoutBtn">Đăng xuất</button></span><a class="btn sec sm" href="../">Xem trang công khai</a></nav></header>
 <main>
 
 
@@ -164,18 +164,6 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <p id="ttMsg" class="mu" style="color:#c8102e" role="alert"></p><div class="tt" id="tt"></div>
 </section>
 
-<section class="view" id="diem-danh">
-<h2>Điểm danh học viên</h2>
-<p class="mu">Chọn lớp và ngày học, sau đó đánh dấu Có mặt hoặc Vắng cho từng học viên.</p>
-<div class="att-toolbar">
-<label>Lớp học<select id="attClass"></select></label>
-<label>Ngày học<input id="attDate" type="date"></label>
-</div>
-<div id="attSummary" class="att-summary" aria-live="polite"></div>
-<div id="attRoster" class="att-roster"></div>
-<p id="attMsg" class="mu" role="status" aria-live="polite"></p>
-</section>
-
 <section class="view" id="hoc-vien">
 <h2>Theo dõi học viên</h2>
 <form id="fSt">
@@ -210,21 +198,6 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <p><button class="btn sec sm" id="regRefresh" type="button">Tải lại danh sách</button></p>
 <p id="regMsg" class="mu" role="status" aria-live="polite"></p>
 <div id="regTable"></div>
-</section>
-
-<section class="view" id="bai-giang">
-<h2>Quản lý bài giảng YouTube</h2>
-<p class="mu">Dán link YouTube, hệ thống tự nhận diện video và lấy ảnh thumbnail. Bài đã lưu sẽ hiển thị ở trang công khai.</p>
-<form id="lessonForm">
-<label class="wide">Tiêu đề bài giảng<input name="title" required maxlength="140" placeholder="Ví dụ: Ngữ pháp N5 – ～は～です"></label>
-<label>Link YouTube<input name="url" type="url" required placeholder="https://www.youtube.com/watch?v=..."></label>
-<label>Cấp độ<select name="level"><option>N5</option><option>N4</option><option>N3</option><option>N2</option><option>N1</option><option>Giao tiếp</option></select></label>
-<label class="wide">Mô tả (không bắt buộc)<textarea name="description" rows="2" maxlength="500" placeholder="Nội dung chính của video..."></textarea></label>
-<div class="wide" id="lessonPreview" hidden></div>
-<button class="btn" type="submit">Lưu bài giảng</button>
-</form>
-<p id="lessonMsg" class="mu" role="status" aria-live="polite"></p>
-<div class="grid g3" id="adminLessonList"></div>
 </section>
 
 <section class="view" id="ket-qua">
@@ -279,25 +252,23 @@ body:not(.authenticated) header,body:not(.authenticated) main{display:none}
 <div id="leads"></div>
 </section>
 
-<p class="note" style="max-width:1000px;margin:0 auto 24px"><span id="syncStatus" role="status" aria-live="polite">Đang chờ xác nhận đồng bộ dữ liệu từ Cloudflare...</span> <button class="btn sec sm" id="syncReload" type="button" style="display:none">Tải dữ liệu mới nhất</button></p>
+<p class="note" id="syncStatus" role="status" aria-live="polite" style="max-width:1000px;margin:0 auto 24px">Đang chờ xác nhận đồng bộ dữ liệu từ Cloudflare...</p>
 </main>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const SYNC_KEYS=["cls","cl","sts","jr","mine","leads","att","lessons"];
-let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null, cloudSessionEpoch=0, cloudReloading=false;
-const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudSaveVersions=new Map(), cloudDirty=new Set(), cloudConflicts=new Set();
+const SYNC_KEYS=["cls","cl","sts","jr","mine","leads"];
+let cloudRevisions={}, cloudSyncReady=false, cloudApplying=false, cloudPoller=null;
+const cloudSaveTimers=new Map(), cloudSaveQueues=new Map(), cloudDirty=new Set();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
-function syncMessage(message,isError=false,canReload=false){const el=$("#syncStatus"),button=$("#syncReload");if(el){el.textContent=message;el.style.color=isError?"#c8102e":"var(--mu)"}if(button)button.style.display=canReload?"inline-block":"none"}
+function syncMessage(message,isError=false){const el=$("#syncStatus");if(el){el.textContent=message;el.style.color=isError?"#c8102e":"var(--mu)"}}
 function sv(k,v){
   try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}
   if(!cloudApplying && SYNC_KEYS.includes(k) && cloudSyncReady && authToken) queueCloudSave(k,v);
 }
 function queueCloudSave(key,value){
   cloudDirty.add(key);
-  const version=(cloudSaveVersions.get(key)||0)+1;
-  cloudSaveVersions.set(key,version);
   clearTimeout(cloudSaveTimers.get(key));
-  cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value,version),700));
+  cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value),700));
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const id=()=>Date.now()+Math.random();
@@ -307,9 +278,9 @@ const endOf=c=>{if(c.end)return c.end;const [h,m]=c.time.split(":").map(Number),
 const sch=n=>{const l=cls.filter(c=>c.name===n).sort((a,b)=>DY.indexOf(a.day)-DY.indexOf(b.day)).map(c=>`${c.day} ${c.time}–${endOf(c)}`);return l.length?"Lịch: "+l.join(", "):""};
 let cls=ld("cls",[{id:1,name:"N5 – Lớp tối",day:"T2",time:"19:00",dur:90},{id:2,name:"N3 – 1 kèm 1",day:"T4",time:"20:00",dur:60},{id:3,name:"Giao tiếp",day:"T7",time:"09:00",dur:90}]);
 let sts=ld("sts",[{id:1,name:"Minh Anh",level:"N5",goal:"Thi N5 tháng 12",p:40},{id:2,name:"Quốc Bảo",level:"N3",goal:"Đi làm công ty Nhật",p:65}]);
-let jr=ld("jr",[]),leads=ld("leads",[]),att=ld("att",[]),lessons=ld("lessons",[]);
+let jr=ld("jr",[]),leads=ld("leads",[]);
 let cl=ld("cl",null);if(!cl)cl=[...new Set(cls.map(c=>c.name))].map((n,i)=>({id:i+1,name:n,level:"",type:"Nhóm",mode:"Online",max:6,fee:"",start:"",note:"",m:sts.filter(s=>s.cls===n).map(s=>s.id)}));
-const views=["lop-hoc","lich-hoc","diem-danh","hoc-vien","nhat-ky","dang-ky-moi","ket-qua","bai-giang","giao-vien"];
+const views=["lop-hoc","lich-hoc","hoc-vien","nhat-ky","dang-ky-moi","ket-qua","giao-vien"];
 function show(){let h=location.hash.slice(1);if(!views.includes(h))h="lop-hoc";$$(".view").forEach(v=>v.classList.toggle("on",v.id===h));$$("#nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===h));scrollTo(0,0)}
 $$("#nav button").forEach(b=>b.onclick=()=>location.hash=b.dataset.v);
 $$("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
@@ -319,7 +290,7 @@ function rTT(){const D=["T2","T3","T4","T5","T6","T7","CN"];$("#tt").innerHTML=D
 const tv=$("#tcls").value;$("#tcls").innerHTML=cl.map(c=>`<option>${esc(c.name)}</option>`).join("");$("#tcls").value=tv;rSt();rCl();$("#stClsList").innerHTML=cl.map(c=>`<label class="ck"><input type="checkbox" name="cls" value="${c.id}">${esc(c.name)}</label>`).join("")||'<span class="mu">Chưa có lớp. Tạo lớp ở mục Lớp học.</span>';
 $$("[data-x]").forEach(b=>b.onclick=()=>{cls=cls.filter(c=>c.id!=b.dataset.x);sv("cls",cls);rTT()})}
 $("#fCls").onsubmit=e=>{e.preventDefault();const o=fd(e.target);if(o.end<=o.time){$("#ttMsg").textContent="Giờ kết thúc phải sau giờ bắt đầu.";return}$("#ttMsg").textContent="";cls.push({id:id(),name:o.name,day:o.day,time:o.time,end:o.end});sv("cls",cls);rTT();e.target.reset()};
-function rSt(){$("#stList").innerHTML=sts.map(s=>`<div class="card"><div class="row"><h3>${esc(s.name)}</h3><span class="lv" style="font-size:1.1rem">${esc(s.level)}</span></div><p class="mu" style="margin:0">${esc(s.goal||"Chưa đặt mục tiêu")}</p><details data-so="s${s.id}"${op.has("s"+s.id)?" open":""}><summary>Lớp: ${inCl(s)}</summary>${cl.map(c=>`<label class="ck"><input type="checkbox" data-sc="${s.id}" value="${c.id}"${c.m.some(i=>i==s.id)?" checked":""}>${esc(c.name)}</label>`).join("")||'<span class="mu">Chưa có lớp.</span>'}</details><div class="mu" style="font-size:.85rem">Tiến độ hoàn thành lộ trình (kéo thanh để cập nhật)</div><div class="bar"><i style="width:${s.p}%"></i></div><div class="row"><input type="range" min="0" max="100" step="5" value="${s.p}" data-p="${s.id}" aria-label="Tiến độ"><b>${s.p}%</b></div><p class="mu" style="margin:6px 0">Có mặt: <b>${att.filter(a=>a.studentId==s.id&&a.status==="present").length}</b> buổi · Vắng: <b>${att.filter(a=>a.studentId==s.id&&a.status==="absent").length}</b> buổi</p><button class="btn sec sm" data-d="${s.id}" style="margin-top:8px">Xóa</button></div>`).join("")||'<p class="empty">Chưa có học viên. Thêm học viên đầu tiên ở trên.</p>';
+function rSt(){$("#stList").innerHTML=sts.map(s=>`<div class="card"><div class="row"><h3>${esc(s.name)}</h3><span class="lv" style="font-size:1.1rem">${esc(s.level)}</span></div><p class="mu" style="margin:0">${esc(s.goal||"Chưa đặt mục tiêu")}</p><details data-so="s${s.id}"${op.has("s"+s.id)?" open":""}><summary>Lớp: ${inCl(s)}</summary>${cl.map(c=>`<label class="ck"><input type="checkbox" data-sc="${s.id}" value="${c.id}"${c.m.some(i=>i==s.id)?" checked":""}>${esc(c.name)}</label>`).join("")||'<span class="mu">Chưa có lớp.</span>'}</details><div class="mu" style="font-size:.85rem">Tiến độ hoàn thành lộ trình (kéo thanh để cập nhật)</div><div class="bar"><i style="width:${s.p}%"></i></div><div class="row"><input type="range" min="0" max="100" step="5" value="${s.p}" data-p="${s.id}" aria-label="Tiến độ"><b>${s.p}%</b></div><p class="mu" style="margin:6px 0">Đã học: <b>${s.n||0}</b> buổi <button class="btn sm" data-a="${s.id}">Điểm danh +1</button></p><button class="btn sec sm" data-d="${s.id}" style="margin-top:8px">Xóa</button></div>`).join("")||'<p class="empty">Chưa có học viên. Thêm học viên đầu tiên ở trên.</p>';
 $$("[data-p]").forEach(r=>r.onchange=()=>{sts.find(s=>s.id==r.dataset.p).p=+r.value;sv("sts",sts);rSt()});
 $$("[data-d]").forEach(b=>b.onclick=()=>{sts=sts.filter(s=>s.id!=b.dataset.d);sv("sts",sts);cl.forEach(c=>c.m=c.m.filter(i=>i!=b.dataset.d));sv("cl",cl);rTT();rJr()});
 $$("[data-a]").forEach(b=>b.onclick=()=>{const s=sts.find(s=>s.id==b.dataset.a);s.n=(s.n||0)+1;sv("sts",sts);rSt()});
@@ -328,24 +299,6 @@ $$("[data-sc]").forEach(x=>x.onchange=()=>{const c=cl.find(c=>c.id==x.value),sid
 
 const fv=$("#jrF").value,ot=sts.map(s=>`<option>${esc(s.name)}</option>`).join("");$("#jrSt").innerHTML=ot;$("#jrF").innerHTML='<option value="">Tất cả học viên</option>'+ot;$("#jrF").value=fv}
 $("#fSt").onsubmit=e=>{e.preventDefault();const o=fd(e.target),ids=[...e.target.querySelectorAll("input[name=cls]:checked")].map(x=>x.value),st={id:id(),p:0,name:o.name,level:o.level,goal:o.goal},full=[];sts.push(st);ids.forEach(v=>{const c=cl.find(c=>c.id==v);if(c.max&&c.m.length>=c.max)full.push(c.name);else c.m.push(st.id)});sv("sts",sts);sv("cl",cl);e.target.reset();rTT();$("#stMsg").textContent=full.length?"Chưa thêm vào lớp đủ sĩ số: "+full.join(", "):""};
-function rAtt(){
- const classSelect=$("#attClass"), dateInput=$("#attDate"), roster=$("#attRoster");
- if(!classSelect||!dateInput||!roster)return;
- const prev=classSelect.value;
- classSelect.innerHTML=cl.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");
- if(prev&&cl.some(c=>String(c.id)===prev))classSelect.value=prev;
- if(!dateInput.value){const now=new Date();dateInput.value=[now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-");}
- const c=cl.find(x=>String(x.id)===classSelect.value);
- if(!c){roster.innerHTML='<p class="empty">Hãy tạo lớp và xếp học viên trước khi điểm danh.</p>';$("#attSummary").textContent="";return}
- const date=dateInput.value, members=sts.filter(s=>c.m.some(id=>id==s.id));
- const records=att.filter(a=>String(a.classId)===String(c.id)&&a.date===date);
- const count=members.reduce((o,s)=>{const r=records.find(a=>a.studentId==s.id);if(r?.status==="present")o.present++;if(r?.status==="absent")o.absent++;return o},{present:0,absent:0});
- $("#attSummary").innerHTML=`<span>${members.length} học viên</span><span>${count.present} có mặt</span><span>${count.absent} vắng</span>`;
- roster.innerHTML=members.map(s=>{const r=records.find(a=>a.studentId==s.id),status=r?.status||"";return `<article class="att-row"><div><b>${esc(s.name)}</b><small>${esc(s.level||"")}</small></div><div class="att-actions"><button type="button" class="att-choice present ${status==="present"?"selected":""}" data-att="present" data-student="${s.id}">Có mặt</button><button type="button" class="att-choice absent ${status==="absent"?"selected":""}" data-att="absent" data-student="${s.id}">Vắng</button></div></article>`}).join("")||'<p class="empty">Lớp này chưa có học viên.</p>';
- roster.querySelectorAll("[data-att]").forEach(btn=>btn.onclick=()=>{const sid=Number(btn.dataset.student),value=btn.dataset.att;att=att.filter(a=>!(String(a.classId)===String(c.id)&&a.date===date&&a.studentId==sid));att.push({id:`${c.id}-${date}-${sid}`,classId:c.id,date,studentId:sid,status:value});sv("att",att);rAtt();rSt();$("#attMsg").textContent="Đã lưu điểm danh buổi học.";});
-}
-$("#attClass")?.addEventListener("change",rAtt);
-$("#attDate")?.addEventListener("change",rAtt);
 function rJr(){const f=$("#jrF").value;$("#jrList").innerHTML=jr.filter(j=>!f||j.st===f).slice().sort((a,b)=>b.date.localeCompare(a.date)).map(j=>`<div class="entry"><button class="x" data-j="${j.id}" aria-label="Xóa">×</button><b>${esc(j.date)} · ${esc(j.st)}</b><br>${esc(j.text)}${j.hw?`<br><span class="mu">Bài tập: ${esc(j.hw)}</span>`:""}</div>`).join("")||'<p class="empty">Chưa có nhật ký. Ghi lại buổi học đầu tiên ở trên.</p>';
 $$("[data-j]").forEach(b=>b.onclick=()=>{jr=jr.filter(j=>j.id!=b.dataset.j);sv("jr",jr);rJr()})}
 $("#fJr").onsubmit=e=>{e.preventDefault();const o=fd(e.target);jr.push({id:id(),date:o.date,st:o.st,text:o.text,hw:o.hw});sv("jr",jr);rJr();e.target.reset()};
@@ -363,44 +316,14 @@ $("#fWord").onsubmit=e=>{e.preventDefault();const o=fd(e.target);mine.push({id:i
 $("#fcDel").onclick=()=>{const w=deck()[wi];if(!w||!w[4])return;mine=mine.filter(m=>m.id!=w[4]);sv("mine",mine);fl=false;rFc()};
 $("#jrF").onchange=rJr;
 function rLd(){$("#leads").innerHTML=leads.map(l=>`<div class="card" style="margin-bottom:8px"><b>${esc(l.name)}</b> · ${esc(l.phone)}<br><span class="mu">${esc(l.level)}${l.goal?" – "+esc(l.goal):""}</span></div>`).join("")||'<p class="empty">Chưa có đăng ký nào.</p>'}
-$("#fLead").onsubmit=e=>{e.preventDefault();leads.push({id:id(),...fd(e.target)});sv("leads",leads);rLd();e.target.reset();$("#leadMsg").textContent="Đã thêm đăng ký học thử. Theo dõi trạng thái đồng bộ ở cuối trang."};
+$("#fLead").onsubmit=e=>{e.preventDefault();leads.push({id:id(),...fd(e.target)});sv("leads",leads);rLd();e.target.reset();$("#leadMsg").textContent="Đã lưu đăng ký trên trình duyệt này. Để được xếp lịch nhanh, hãy gọi hotline 098 425 2743 hoặc nhắn Zalo."};
 const op=new Set();
 function rCl(){$("#clList").innerHTML=cl.map(c=>`<div class="card"><div class="row"><h3>${esc(c.name)}</h3><span class="lv" style="font-size:1.1rem">${esc(c.level)}</span></div><p style="margin:6px 0"><span class="chip">${esc(c.type)}</span><span class="chip">${esc(c.mode)}</span><span class="chip">${c.m.length}/${c.max||"∞"} học viên</span>${c.fee?`<span class="chip">${Number(c.fee).toLocaleString("vi-VN")}đ/tháng</span>`:""}${c.start?`<span class="chip">Khai giảng ${esc(c.start)}</span>`:""}</p>${c.note?`<p style="margin:6px 0">${esc(c.note)}</p>`:""}<p class="mu" style="margin:6px 0;font-size:.85rem">${sch(c.name)||"Chưa có lịch. Thêm ở mục Lịch học."}</p><details data-o="${c.id}"${op.has(String(c.id))?" open":""}><summary>Chọn học viên cho lớp (${c.m.length})</summary>${sts.map(s=>`<label style="display:flex;gap:8px;align-items:center;margin:6px 0;color:var(--tx)"><input type="checkbox" style="width:auto" data-k="${c.id}" value="${s.id}"${c.m.some(i=>i==s.id)?" checked":""}>${esc(s.name)} <span class="mu">${esc(s.level)}</span></label>`).join("")||'<p class="empty">Chưa có học viên. Thêm ở mục Học viên.</p>'}</details><button class="btn sec sm" data-dc="${c.id}" style="margin-top:8px">Xóa lớp</button></div>`).join("")||'<p class="empty">Chưa có lớp. Tạo lớp đầu tiên ở trên.</p>';
 $$("[data-o]").forEach(d=>d.ontoggle=()=>{d.open?op.add(d.dataset.o):op.delete(d.dataset.o)});
 $$("[data-k]").forEach(x=>x.onchange=()=>{const c=cl.find(c=>c.id==x.dataset.k);if(x.checked){if(c.max&&c.m.length>=c.max){x.checked=false;$("#clMsg").textContent="Lớp "+c.name+" đã đủ sĩ số tối đa.";return}c.m.push(+x.value)}else c.m=c.m.filter(i=>i!=x.value);$("#clMsg").textContent="";sv("cl",cl);rTT()});
 $$("[data-dc]").forEach(b=>b.onclick=()=>{const c=cl.find(c=>c.id==b.dataset.dc);cls=cls.filter(s=>s.name!==c.name);cl=cl.filter(x=>x.id!=c.id);sv("cl",cl);sv("cls",cls);rTT()})}
 $("#fCl").onsubmit=e=>{e.preventDefault();const o=fd(e.target);if(cl.some(c=>c.name===o.name)){$("#clMsg").textContent="Tên lớp đã tồn tại.";return}cl.push({id:id(),name:o.name,level:o.level,type:o.type,mode:o.mode,max:+o.max||0,fee:o.fee,start:o.start,note:o.note,m:[]});sv("cl",cl);$("#clMsg").textContent="";e.target.reset();rTT()};
-
-function youtubeId(value){
- try{
-  const u=new URL(value.trim()),host=u.hostname.replace(/^www\./,"").toLowerCase();
-  if(host==="youtu.be")return u.pathname.split("/").filter(Boolean)[0]||"";
-  if(["youtube.com","m.youtube.com","music.youtube.com"].includes(host)){
-   if(u.pathname==="/watch")return u.searchParams.get("v")||"";
-   const m=u.pathname.match(/^\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{6,})/);return m?m[1]:"";
-  }
- }catch(e){}
- return "";
-}
-function rLessons(){
- const host=$("#adminLessonList");if(!host)return;
- host.innerHTML=lessons.map((v,i)=>'<article class="card"><img src="https://img.youtube.com/vi/'+esc(v.videoId)+'/hqdefault.jpg" alt="" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px"><span class="chip">'+esc(v.level)+'</span><h3>'+esc(v.title)+'</h3><p class="mu">'+esc(v.description||"")+'</p><div class="acts"><a class="btn sec sm" href="https://www.youtube.com/watch?v='+encodeURIComponent(v.videoId)+'" target="_blank" rel="noopener">Xem video</a><button class="btn sec sm" type="button" data-lesson-delete="'+i+'">Xóa</button></div></article>').join("")||'<p class="mu">Chưa có video nào. Hãy thêm link YouTube ở trên.</p>';
- host.querySelectorAll("[data-lesson-delete]").forEach(b=>b.onclick=()=>{const i=Number(b.dataset.lessonDelete);if(!confirm("Xóa bài giảng này?"))return;lessons.splice(i,1);sv("lessons",lessons);rLessons();});
-}
-const lessonUrl=$("#lessonForm [name=url]");
-if(lessonUrl)lessonUrl.addEventListener("input",()=>{
- const vid=youtubeId(lessonUrl.value),box=$("#lessonPreview");
- if(!vid){box.hidden=true;box.innerHTML="";return}
- box.hidden=false;box.innerHTML='<p class="mu">Xem trước thumbnail</p><img src="https://img.youtube.com/vi/'+esc(vid)+'/hqdefault.jpg" alt="Thumbnail video" style="width:min(100%,420px);aspect-ratio:16/9;object-fit:cover;border-radius:12px">';
-});
-$("#lessonForm")?.addEventListener("submit",e=>{
- e.preventDefault();const f=e.currentTarget,o=Object.fromEntries(new FormData(f)),videoId=youtubeId(o.url);
- if(!videoId){$("#lessonMsg").textContent="Link YouTube chưa đúng. Hãy dùng link youtube.com/watch, youtu.be, Shorts hoặc Embed.";return}
- lessons.unshift({id:Date.now().toString(),title:o.title.trim(),level:o.level,description:o.description.trim(),url:o.url.trim(),videoId,createdAt:new Date().toISOString()});
- sv("lessons",lessons);f.reset();$("#lessonPreview").hidden=true;$("#lessonPreview").innerHTML="";$("#lessonMsg").textContent="Đã lưu bài giảng. Video sẽ xuất hiện trên trang công khai sau khi đồng bộ Cloudflare.";rLessons();
-});
-
-rTT();rSt();rAtt();rJr();rFc();rLd();rLessons();show();
+rTT();rSt();rJr();rFc();rLd();show();
 
 
 // Kết nối xác thực Cloudflare Worker API
@@ -410,7 +333,7 @@ let authToken = sessionStorage.getItem("jp_class_token") || "";
 
 async function apiRequest(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
-  if (authToken && !headers.Authorization) headers.Authorization = "Bearer " + authToken;
+  if (authToken) headers.Authorization = "Bearer " + authToken;
   const response = await fetch(API_BASE + path, { ...options, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.detail || data.error || "Không thể xử lý yêu cầu.");
@@ -418,7 +341,7 @@ async function apiRequest(path, options = {}) {
 }
 
 function currentStateValue(key){
-  return ({cls,cl,sts,jr,mine,leads,att,lessons})[key];
+  return ({cls,cl,sts,jr,mine,leads})[key];
 }
 function applyStateValue(key,value){
   if(!Array.isArray(value)) return;
@@ -428,123 +351,57 @@ function applyStateValue(key,value){
   else if(key==="jr") jr=value;
   else if(key==="mine") mine=value;
   else if(key==="leads") leads=value;
-  else if(key==="att") att=value;
-  else if(key==="lessons") lessons=value;
   try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}
 }
 function renderAllData(){
-  rTT(); rSt(); rAtt(); rJr(); rFc(); rLd(); rLessons(); show();
+  rTT(); rJr(); rFc(); rLd(); show();
 }
-async function saveCloudKey(key,value,version){
-  const token=authToken, epoch=cloudSessionEpoch;
-  if(!token || !cloudSyncReady) return false;
+async function saveCloudKey(key,value){
+  if(!authToken || !cloudSyncReady) return;
   const previous=cloudSaveQueues.get(key)||Promise.resolve();
   const task=previous.catch(()=>{}).then(async()=>{
-    if(epoch!==cloudSessionEpoch || token!==authToken || !cloudSyncReady) return false;
     try{
       const result=await apiRequest("/api/state/"+key,{
         method:"PUT",
-        headers:{Authorization:"Bearer "+token},
         body:JSON.stringify({data:value,revision:cloudRevisions[key]??null})
       });
-      if(epoch!==cloudSessionEpoch || token!==authToken) return false;
       cloudRevisions[key]=result.revision;
-      if(version===undefined || cloudSaveVersions.get(key)===version) cloudDirty.delete(key);
-      if(version===undefined || cloudSaveVersions.get(key)===version) syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
+      cloudDirty.delete(key);
+      syncMessage("Đã đồng bộ dữ liệu lên Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
       return true;
     }catch(error){
-      if(epoch!==cloudSessionEpoch || token!==authToken) return false;
       if(error.message.includes("dữ liệu mới hơn") || error.message.includes("ghi đè") || error.message.includes("máy chủ")){
-        cloudConflicts.add(key);
-        syncMessage("Phát hiện dữ liệu mới hơn từ thiết bị khác ở mục "+key+". Hệ thống đã chặn ghi đè.",true,true);
-      }else{
-        syncMessage("Chưa đồng bộ được mục "+key+": "+error.message+" · Hệ thống sẽ tự thử lại.",true);
-        if(!cloudReloading && version!==undefined && cloudSaveVersions.get(key)===version){
-          clearTimeout(cloudSaveTimers.get(key));
-          cloudSaveTimers.set(key,setTimeout(()=>saveCloudKey(key,value,version),5000));
-        }
-      }
+        syncMessage("Phát hiện thay đổi từ thiết bị khác ở mục "+key+". Đã chặn ghi đè; hãy tải lại dữ liệu mới nhất.",true);
+      }else syncMessage("Chưa đồng bộ được mục "+key+": "+error.message,true);
       return false;
     }
   });
   cloudSaveQueues.set(key,task);
-  return await task;
+  await task;
 }
 async function fetchCloudState(){
   const result=await apiRequest("/api/state");
   return result;
 }
-async function reloadCloudData(){
-  if(!authToken || !cloudSyncReady || cloudReloading) return;
-  if(cloudDirty.size && !confirm("Một số thay đổi trên thiết bị này chưa được đồng bộ. Tải dữ liệu mới nhất sẽ thay thế các thay đổi đó. Bạn có chắc muốn tiếp tục?")) return;
-  const token=authToken, epoch=cloudSessionEpoch, startingVersions=new Map(cloudSaveVersions);
-  cloudReloading=true;
-  syncMessage("Đang tải dữ liệu mới nhất từ Cloudflare...");
-  for(const timer of cloudSaveTimers.values()) clearTimeout(timer);
-  cloudSaveTimers.clear();
-  try{
-    await Promise.all([...cloudSaveQueues.values()].map(task=>task.catch(()=>{})));
-    if(epoch!==cloudSessionEpoch || token!==authToken) return;
-    const editedDuringReload=SYNC_KEYS.some(key=>(cloudSaveVersions.get(key)||0)!==(startingVersions.get(key)||0));
-    if(editedDuringReload){
-      syncMessage("Có chỉnh sửa mới trong lúc tải dữ liệu. Các thay đổi mới được giữ nguyên; hãy tải lại lần nữa khi sẵn sàng.",true,true);
-      return;
-    }
-    const result=await apiRequest("/api/state",{headers:{Authorization:"Bearer "+token}});
-    if(epoch!==cloudSessionEpoch || token!==authToken) return;
-    cloudApplying=true;
-    for(const key of SYNC_KEYS){
-      if(Object.prototype.hasOwnProperty.call(result.state||{},key)) applyStateValue(key,result.state[key]);
-    }
-    cloudRevisions=result.revisions||{};
-    cloudDirty.clear();
-    cloudConflicts.clear();
-    cloudApplying=false;
-    renderAllData();
-    syncMessage("Đã tải dữ liệu mới nhất từ Cloudflare · "+new Date().toLocaleTimeString("vi-VN"));
-  }catch(error){
-    cloudApplying=false;
-    if(epoch===cloudSessionEpoch) syncMessage("Không tải được dữ liệu mới: "+error.message,true,true);
-  }finally{
-    if(epoch===cloudSessionEpoch) cloudReloading=false;
-  }
-}
-$("#syncReload").onclick=reloadCloudData;
 async function initializeCloudSync(){
-  const epoch=cloudSessionEpoch, token=authToken;
   syncMessage("Đang kiểm tra và đồng bộ dữ liệu...");
   try{
     const result=await fetchCloudState();
-    if(epoch!==cloudSessionEpoch || token!==authToken) return;
     const keys=Object.keys(result.state||{});
-    const hadLocalClasses=localStorage.getItem("cl")!==null;
     cloudRevisions=result.revisions||{};
     cloudApplying=true;
     if(keys.length){
       for(const key of SYNC_KEYS){
         if(Object.prototype.hasOwnProperty.call(result.state,key)) applyStateValue(key,result.state[key]);
       }
-      // Nếu máy chủ đã có lớp học nhưng chưa có danh mục lớp và trình duyệt
-      // này chưa từng lưu danh mục riêng, dựng lại danh mục từ dữ liệu lớp mới nhất.
-      if(Object.prototype.hasOwnProperty.call(result.state,"cls") &&
-         !Object.prototype.hasOwnProperty.call(result.state,"cl") && !hadLocalClasses){
-        cl=[...new Set(cls.map(c=>c.name))].map((name,index)=>({
-          id:index+1,name,level:"",type:"Nhóm",mode:"Online",max:6,fee:"",start:"",note:"",
-          m:sts.filter(student=>student.cls===name).map(student=>student.id)
-        }));
-      }
     }
     cloudApplying=false;
     cloudSyncReady=true;
     if(!keys.length){
       syncMessage("Đang chuyển dữ liệu hiện có trên trình duyệt lên Cloudflare...");
-      for(const key of SYNC_KEYS){
-        if(epoch!==cloudSessionEpoch || token!==authToken) return;
-        if(!(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Chưa chuyển hết dữ liệu cũ lên máy chủ. Vui lòng kiểm tra kết nối rồi đăng nhập lại.");
-      }
+      for(const key of SYNC_KEYS) if(!(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Chưa chuyển hết dữ liệu cũ lên máy chủ. Vui lòng kiểm tra kết nối rồi đăng nhập lại.");
     }else{
       for(const key of SYNC_KEYS){
-        if(epoch!==cloudSessionEpoch || token!==authToken) return;
         if(!Object.prototype.hasOwnProperty.call(result.state,key) && !(await saveCloudKey(key,currentStateValue(key)))) throw new Error("Không thể khởi tạo nhóm dữ liệu "+key+".");
       }
     }
@@ -555,17 +412,14 @@ async function initializeCloudSync(){
     cloudPoller=setInterval(pollCloudState,20000);
   }catch(error){
     cloudApplying=false;
-    if(epoch!==cloudSessionEpoch || token!==authToken) return;
     cloudSyncReady=false;
     syncMessage("Không thể tải dữ liệu dùng chung: "+error.message,true);
   }
 }
 async function pollCloudState(){
   if(!authToken || !cloudSyncReady) return;
-  const epoch=cloudSessionEpoch, token=authToken;
   try{
     const result=await fetchCloudState();
-    if(epoch!==cloudSessionEpoch || token!==authToken) return;
     const changed=SYNC_KEYS.filter(key=>(result.revisions?.[key]||0)>(cloudRevisions[key]||0));
     if(!changed.length) return;
     if(cloudDirty.size){
@@ -580,12 +434,10 @@ async function pollCloudState(){
     cloudApplying=false;
     renderAllData();
     syncMessage("Đã nhận cập nhật mới từ thiết bị khác · "+new Date().toLocaleTimeString("vi-VN"));
-  }catch(error){if(epoch===cloudSessionEpoch){cloudApplying=false;syncMessage("Mất kết nối đồng bộ tạm thời: "+error.message,true)}}
+  }catch(error){cloudApplying=false;syncMessage("Mất kết nối đồng bộ tạm thời: "+error.message,true)}
 }
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible") pollCloudState()});
 async function enterSystem(user) {
-  cloudSessionEpoch++;
-  cloudReloading=false;
   signedInUser = user;
   document.body.classList.add("authenticated");
   document.body.classList.toggle("is-admin", user.role === "admin");
@@ -601,20 +453,12 @@ async function enterSystem(user) {
 
 function leaveSystem() {
   const oldToken = authToken;
-  cloudSessionEpoch++;
-  cloudReloading=false;
   authToken = "";
   signedInUser = null;
   sessionStorage.removeItem("jp_class_token");
   document.body.classList.remove("authenticated", "is-admin");
   cloudSyncReady=false;
   if(cloudPoller){clearInterval(cloudPoller);cloudPoller=null}
-  for(const timer of cloudSaveTimers.values()) clearTimeout(timer);
-  cloudSaveTimers.clear();
-  cloudSaveQueues.clear();
-  cloudSaveVersions.clear();
-  cloudDirty.clear();
-  cloudConflicts.clear();
   $("#loginGate").style.display = "grid";
   $("#loginForm").reset();
   $("#loginError").textContent = "Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại.";
